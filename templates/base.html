@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Ampoulex{% endblock %} | Business Management</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- AdminLTE CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    
+    <!-- Custom Styles -->
+    <style>
+        .main-header { 
+            position: sticky !important; 
+            top: 0 !important; 
+            z-index: 1030 !important; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important; 
+        }
+        .content-header { 
+            position: sticky; 
+            top: 57px; 
+            z-index: 1020; 
+            background: #f4f6f9; 
+            padding: 1rem; 
+            margin-bottom: 1rem; 
+            border-bottom: 1px solid #dee2e6; 
+        }
+        .main-sidebar { 
+            position: fixed !important; 
+            height: 100vh !important; 
+            overflow-y: auto !important; 
+            z-index: 1040 !important; 
+            top: 57px !important; 
+        }
+        .content { 
+            padding: 1rem 1.5rem !important; 
+        }
+        .brand-link { 
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%) !important; 
+        }
+        .btn-primary { 
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
+            border: none; 
+        }
+        .btn-primary:hover { 
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); 
+        }
+        .card { 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .status-badge { 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+        }
+        .status-new { background: #dbeafe; color: #1e40af; }
+        .status-followup { background: #fef3c7; color: #92400e; }
+        .status-closed { background: #d1fae5; color: #065f46; }
+        .status-converted { background: #e0e7ff; color: #3730a3; }
+        
+        /* Low stock alert badge */
+        .badge-low-stock {
+            background: #fee2e2;
+            color: #dc2626;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Timeline styles for order view */
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        .timeline-item {
+            display: flex;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .timeline-marker {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 15px;
+            flex-shrink: 0;
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .timeline-marker.active {
+            opacity: 1;
+        }
+        .timeline-marker:not(.active) {
+            background: #e2e8f0 !important;
+            opacity: 0.5;
+        }
+        .timeline-content {
+            flex: 1;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        .timeline-content h6 {
+            margin: 0;
+            color: #1e3a8a;
+        }
+        .timeline-content p {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
+<div class="wrapper">
+    <!-- Navbar -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
+            </li>
+        </ul>
+        
+        <ul class="navbar-nav ml-auto">
+            <!-- Low Stock Alert -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.products') }}" title="Low Stock Alerts">
+                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                    <span id="low-stock-badge" class="badge badge-danger" style="display: none;">0</span>
+                </a>
+            </li>
+            
+            <!-- Inquiry Count -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.inquiries') }}" title="New Inquiries">
+                    <i class="fas fa-envelope"></i>
+                    <span id="inquiry-badge" class="badge badge-warning" style="display: none;">0</span>
+                </a>
+            </li>
+            
+            <!-- Customer Site Link -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.customer_site') }}" target="_blank">
+                    <i class="fas fa-globe"></i> Customer Site
+                </a>
+            </li>
+            
+            <!-- User Dropdown -->
+            <li class="nav-item dropdown">
+                <a class="nav-link" data-toggle="dropdown" href="#">
+                    <i class="fas fa-user"></i> {{ current_user.username }}
+                </a>
+                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                    <a href="{{ url_for('main.settings') }}" class="dropdown-item">
+                        <i class="fas fa-cog mr-2"></i> Settings
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="{{ url_for('main.logout') }}" class="dropdown-item text-danger">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Sidebar -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <a href="{{ url_for('main.dashboard') }}" class="brand-link">
+            <span class="brand-text font-weight-light">🏭 Ampoulex</span>
+        </a>
+        
+        <div class="sidebar">
+            <!-- User Panel -->
+            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                <div class="info">
+                    <a href="#" class="d-block">{{ current_user.username }}</a>
+                    <small class="text-muted">{{ current_user.role|title }}</small>
+                </div>
+            </div>
+            
+            <!-- Sidebar Menu -->
+            <nav class="mt-2">
+                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                    <!-- Dashboard -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <p>Dashboard</p>
+                        </a>
+                    </li>
+                    
+                    <!-- Sales & Orders -->
+                    <li class="nav-item has-treeview {% if 'inquiry' in request.endpoint or 'order' in request.endpoint %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'inquiry' in request.endpoint or 'order' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-shopping-cart"></i>
+                            <p>
+                                Sales & Orders
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.inquiries') }}" class="nav-link {% if 'inquiry' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-envelope"></i>
+                                    <p>Inquiries</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.orders') }}" class="nav-link {% if 'order' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-file-invoice"></i>
+                                    <p>Orders</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Products & Inventory -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.products') }}" class="nav-link {% if 'product' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-box"></i>
+                            <p>
+                                Products
+                                {% if low_stock_count is defined and low_stock_count > 0 %}
+                                <span class="right badge badge-danger">{{ low_stock_count }}</span>
+                                {% endif %}
+                            </p>
+                        </a>
+                    </li>
+                    <!-- Painting Service -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.painting_dashboard') }}" class="nav-link {% if 'painting' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-palette"></i>
+                            <p>Painting Service</p>
+                        </a>
+                    </li>
+                    <!-- Customers -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.customers') }}" class="nav-link {% if 'customer' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p>Customers</p>
+                        </a>
+                    </li>
+                    
+                    <!-- Production Header -->
+                    <li class="nav-header">PRODUCTION</li>
+
+                    <!-- Raw Materials -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.raw_materials') }}" class="nav-link {% if 'raw_material' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-cubes"></i>
+                            <p>Raw Materials</p>
+                        </a>
+                    </li>
+
+                    <!-- Production Batches -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.production_batches') }}" class="nav-link {% if 'production_batch' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-industry"></i>
+                            <p>Production Batches</p>
+                        </a>
+                    </li>
+
+                    <!-- Production Reports -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.production_reports') }}" class="nav-link {% if 'production_reports' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-chart-bar"></i>
+                            <p>Production Reports</p>
+                        </a>
+                    </li>
+
+                    <!-- Material Consumption Report -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.material_consumption_report') }}" class="nav-link">
+                            <i class="nav-icon fas fa-file-alt"></i>
+                            <p>Material Consumption</p>
+                        </a>
+                    </li>
+                    <!-- Supply Chain Header -->
+                    <li class="nav-header">SUPPLY CHAIN</li>
+
+                    <!-- Suppliers -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.suppliers') }}" class="nav-link {% if 'supplier' in request.endpoint and 'purchase' not in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-truck"></i>
+                            <p>Suppliers</p>
+                        </a>
+                    </li>
+
+                    <!-- Purchase Orders -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.purchase_orders') }}" class="nav-link {% if 'purchase_order' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-file-invoice"></i>
+                            <p>Purchase Orders</p>
+                        </a>
+                    </li>
+
+                    <!-- Goods Receipts -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.goods_receipts') }}" class="nav-link {% if 'goods_receipt' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-dolly"></i>
+                            <p>Goods Receipts</p>
+                        </a>
+                    </li>
+
+                    <!-- Warehouses -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.warehouses') }}" class="nav-link {% if 'warehouse' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-warehouse"></i>
+                            <p>Warehouses</p>
+                        </a>
+                    </li>
+
+                    <!-- Stock Transfers -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.stock_transfers') }}" class="nav-link {% if 'stock_transfer' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-exchange-alt"></i>
+                            <p>Stock Transfers</p>
+                        </a>
+                    </li>
+
+                    <!-- Material Batches -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.material_batches') }}" class="nav-link {% if 'material_batch' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-boxes"></i>
+                            <p>Material Batches</p>
+                        </a>
+                    </li>
+
+                    <!-- Supplier Invoices -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.supplier_invoices') }}" class="nav-link {% if 'supplier_invoice' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                            <p>Supplier Invoices</p>
+                        </a>
+                    </li>
+                    
+                    
+                    <!-- Finance Header -->
+                    <li class="nav-header">FINANCE</li>
+                    
+                    <!-- Payroll & HR -->
+                    <li class="nav-item has-treeview {% if 'payroll' in request.endpoint or 'employee' in request.endpoint or 'attendance' in request.endpoint or 'timesheet' in request.endpoint or 'leave' in request.endpoint or 'payment' in request.endpoint %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'payroll' in request.endpoint or 'employee' in request.endpoint or 'attendance' in request.endpoint or 'timesheet' in request.endpoint or 'leave' in request.endpoint or 'payment' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-money-bill-wave"></i>
+                            <p>
+                                Payroll & HR
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.payroll') }}" class="nav-link {% if request.endpoint == 'main.payroll' %}active{% endif %}">
+                                    <i class="nav-icon fas fa-users"></i>
+                                    <p>Employees</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.attendance') }}" class="nav-link {% if 'attendance' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-clipboard-check"></i>
+                                    <p>Attendance</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.timesheets') }}" class="nav-link {% if 'timesheet' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-table"></i>
+                                    <p>Timesheets</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.leave_requests') }}" class="nav-link {% if 'leave' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-calendar-minus"></i>
+                                    <p>Leave Requests</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.payroll_payments') }}" class="nav-link {% if 'payment' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-money-bill"></i>
+                                    <p>Payments</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Expenses -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.expenses') }}" class="nav-link {% if 'expense' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-receipt"></i>
+                            <p>Expenses</p>
+                        </a>
+                    </li>
+                    
+                    <!-- Accounting -->
+                    <!-- ============================================================================
+     ACCOUNTING & FINANCE NAVIGATION (ADD TO SIDEBAR)
+     ============================================================================ -->
+
+<!-- Accounting Header -->
+<li class="nav-header">ACCOUNTING & FINANCE</li>
+<li class="nav-item">
+    <a href="{{ url_for('main.accounting_dashboard') }}" class="nav-link">
+        <i class="nav-icon fas fa-calculator"></i>
+        <p>Accounting</p>
+    </a>
+</li>
+<li class="nav-item">
+    <a href="{{ url_for('main.chart_of_accounts') }}" class="nav-link">
+        <i class="nav-icon fas fa-list"></i>
+        <p>Chart of Accounts</p>
+    </a>
+</li>
+<li class="nav-item">
+    <a href="{{ url_for('main.journal_entries') }}" class="nav-link">
+        <i class="nav-icon fas fa-book"></i>
+        <p>Journal Entries</p>
+    </a>
+</li>
+<li class="nav-item">
+    <a href="{{ url_for('main.general_ledger') }}" class="nav-link">
+        <i class="nav-icon fas fa-book-open"></i>
+        <p>General Ledger</p>
+    </a>
+</li>
+<li class="nav-item">
+    <a href="{{ url_for('main.trial_balance') }}" class="nav-link">
+        <i class="nav-icon fas fa-balance-scale"></i>
+        <p>Trial Balance</p>
+    </a>
+</li>
+<li class="nav-item">
+    <a href="{{ url_for('main.payment_vouchers') }}" class="nav-link">
+        <i class="nav-icon fas fa-money-bill-wave"></i>
+        <p>Payment Vouchers</p>
+    </a>
+</li>
+<li class="nav-item">
+    <a href="{{ url_for('main.receipt_vouchers') }}" class="nav-link">
+        <i class="nav-icon fas fa-hand-holding-usd"></i>
+        <p>Receipt Vouchers</p>
+    </a>
+</li>
+<li class="nav-item">
+    <a href="{{ url_for('main.bank_accounts') }}" class="nav-link">
+        <i class="nav-icon fas fa-university"></i>
+        <p>Bank Accounts</p>
+    </a>
+</li>
+<li class="nav-item">
+    <a href="{{ url_for('main.bank_reconciliation') }}" class="nav-link">
+        <i class="nav-icon fas fa-exchange-alt"></i>
+        <p>Bank Reconciliation</p>
+    </a>
+</li>
+<!-- Accounting Periods -->
+<li class="nav-item">
+    <a href="{{ url_for('main.accounting_periods') }}" class="nav-link {{ 'active' if request.endpoint == 'main.accounting_periods' }}">
+        <i class="nav-icon fas fa-calendar-alt"></i>
+        <p>Accounting Periods</p>
+    </a>
+</li>
+<li class="nav-item">
+    <a href="{{ url_for('main.audit_log') }}" class="nav-link">
+        <i class="nav-icon fas fa-history"></i>
+        <p>Audit Log</p>
+    </a>
+</li>
+
+    <!-- Financial Statements Header -->
+    <li class="nav-header mt-3">FINANCIAL STATEMENTS</li>
+
+    <!-- Profit & Loss -->
+    <li class="nav-item">
+        <a href="{{ url_for('main.profit_loss') }}" class="nav-link {{ 'active' if request.endpoint == 'main.profit_loss' }}">
+            <i class="nav-icon fas fa-chart-line"></i>
+            <p>Profit & Loss</p>
+        </a>
+    </li>
+
+    <!-- Balance Sheet -->
+    <li class="nav-item">
+        <a href="{{ url_for('main.balance_sheet') }}" class="nav-link {{ 'active' if request.endpoint == 'main.balance_sheet' }}">
+            <i class="nav-icon fas fa-file-invoice-dollar"></i>
+            <p>Balance Sheet</p>
+        </a>
+    </li>
+
+    <!-- Cash Flow -->
+    <li class="nav-item">
+        <a href="{{ url_for('main.cash_flow') }}" class="nav-link {{ 'active' if request.endpoint == 'main.cash_flow' }}">
+            <i class="nav-icon fas fa-flowchart"></i>
+            <p>Cash Flow Statement</p>
+        </a>
+    </li>
+                    
+                    <!-- Financial Statements (Phase 2) -->
+                    <li class="nav-item has-treeview {% if 'profit_loss' in request.endpoint or 'balance_sheet' in request.endpoint or 'cash_flow' in request.endpoint %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'profit_loss' in request.endpoint or 'balance_sheet' in request.endpoint or 'cash_flow' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                            <p>
+                                Financial Statements
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.profit_loss') }}" class="nav-link {% if 'profit_loss' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-chart-line"></i>
+                                    <p>P&L Statement</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.balance_sheet') }}" class="nav-link {% if 'balance_sheet' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-balance-scale"></i>
+                                    <p>Balance Sheet</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.cash_flow') }}" class="nav-link {% if 'cash_flow' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-hand-holding-usd"></i>
+                                    <p>Cash Flow</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Analytics Header -->
+                    <li class="nav-header">ANALYTICS</li>
+
+                    <!-- Advanced Analytics -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.analytics_dashboard') }}" class="nav-link {% if 'analytics' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-chart-line"></i>
+                            <p>Advanced Analytics</p>
+                        </a>
+                    </li>
+
+                    <!-- Analysis -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.analytics_dashboard') }}" class="nav-link {% if 'analytics' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-chart-pie"></i>
+                            <p>Analysis</p>
+                        </a>
+                    </li>
+
+                    <!-- Reports Header -->
+                    <li class="nav-header">REPORTS</li>
+
+                    <!-- Reports Dashboard -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.reports_dashboard') }}" class="nav-link {% if 'reports_dashboard' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-chart-bar"></i>
+                            <p>Reports Dashboard</p>
+                        </a>
+                    </li>
+
+                    <!-- Sales Analysis -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.sales_analysis_report') }}" class="nav-link {% if 'sales_analysis' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-chart-line"></i>
+                            <p>Sales Analysis</p>
+                        </a>
+                    </li>
+
+                    <!-- Inventory Valuation -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.inventory_valuation_report') }}" class="nav-link {% if 'inventory_valuation' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-boxes"></i>
+                            <p>Inventory Valuation</p>
+                        </a>
+                    </li>
+
+                    <!-- Production Efficiency -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.production_efficiency_report') }}" class="nav-link {% if 'production_efficiency' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-industry"></i>
+                            <p>Production Efficiency</p>
+                        </a>
+                    </li>
+                    
+                    <!-- System Header -->
+                    <li class="nav-header">SYSTEM</li>
+                    
+                    <!-- Settings -->
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.settings') }}" class="nav-link {% if 'settings' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-cog"></i>
+                            <p>Settings</p>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+        <!-- Content Header -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">{% block page_title %}Dashboard{% endblock %}</h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Home</a></li>
+                            <li class="breadcrumb-item active">{% block breadcrumb_active %}Dashboard{% endblock %}</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <section class="content">
+            <div class="container-fluid">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- Page Content -->
+                {% block content %}{% endblock %}
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <strong>Copyright &copy; {{ current_year }} Ampoulex</strong>. All rights reserved.
+        <div class="float-right d-none d-sm-inline-block">
+            <b>Version</b> 3.0 (Phase 3)
+        </div>
+    </footer>
+</div>
+
+<!-- jQuery -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- AdminLTE App -->
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+
+<!-- Socket.IO for Real-Time Updates (ONLY ONCE - REPLACE LINES 190-285) -->
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+    // Connect to Socket.IO server (only once - no duplicates)
+    if (typeof window.socket === 'undefined') {
+        window.socket = io('/admin', {
+            path: '/socket.io/admin',
+            reconnection: true,
+            reconnectionAttempts: 5
+        });
+        
+        window.socket.on('connect', () => {
+            console.log('✅ Connected to real-time updates');
+        });
+        
+        window.socket.on('new_inquiry', function(data) {
+            console.log('📬 New inquiry:', data);
+            showToast('New Inquiry', `${data.customer} - ${data.business}`, 'info');
+        });
+        
+        window.socket.on('new_order', function(data) {
+            console.log('🛒 New order:', data);
+            showToast('New Order', `${data.customer} - PKR ${data.total}`, 'success');
+        });
+    }
+    
+    // Toast notification function
+    function showToast(title, message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        toast.style.cssText = 'top: 70px; right: 20px; z-index: 9999; min-width: 300px;';
+        toast.innerHTML = `
+            <strong>${title}</strong><br>${message}
+            <button type="button" class="close" onclick="this.parentElement.remove()">&times;</button>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+    }
+
+    
+    // Update badges on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateInquiryBadge();
+        updateLowStockBadge();
+        
+        // Refresh badges every 30 seconds
+        setInterval(updateInquiryBadge, 30000);
+        setInterval(updateLowStockBadge, 30000);
+    });
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

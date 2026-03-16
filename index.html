@@ -1,0 +1,1744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaPack Solutions - Business Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fontsource-roboto@5.0.0/index.css" rel="stylesheet">
+    <style>
+        * { font-family: 'Roboto', sans-serif; }
+        .sidebar-item:hover { background: linear-gradient(90deg, rgba(59,130,246,0.1) 0%, transparent 100%); }
+        .sidebar-item.active { background: linear-gradient(90deg, rgba(59,130,246,0.2) 0%, transparent 100%); border-left: 3px solid #3b82f6; }
+        .card { transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .modal { transition: opacity 0.3s ease; }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+        .btn-primary:hover { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-new { background: #dbeafe; color: #1e40af; }
+        .status-followup { background: #fef3c7; color: #92400e; }
+        .status-closed { background: #d1fae5; color: #065f46; }
+        .status-converted { background: #e0e7ff; color: #3730a3; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app" class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-lg flex flex-col z-20">
+            <div class="p-6 border-b">
+                <h1 class="text-xl font-bold text-blue-600">🏭 PharmaPack</h1>
+                <p class="text-xs text-gray-500">Business Management</p>
+            </div>
+            <nav class="flex-1 overflow-y-auto py-4">
+                <div class="px-4 mb-2">
+                    <p class="text-xs font-semibold text-gray-400 uppercase">Main</p>
+                </div>
+                <a href="#" onclick="showSection('dashboard')" class="sidebar-item active flex items-center px-6 py-3 text-gray-700" id="nav-dashboard">
+                    <span class="mr-3">📊</span> Dashboard
+                </a>
+                <a href="#" onclick="showSection('inquiries')" class="sidebar-item flex items-center px-6 py-3 text-gray-700" id="nav-inquiries">
+                    <span class="mr-3">📧</span> Inquiries
+                    <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full" id="inquiry-count">3</span>
+                </a>
+                <a href="#" onclick="showSection('orders')" class="sidebar-item flex items-center px-6 py-3 text-gray-700" id="nav-orders">
+                    <span class="mr-3">📦</span> Orders
+                </a>
+                <a href="#" onclick="showSection('products')" class="sidebar-item flex items-center px-6 py-3 text-gray-700" id="nav-products">
+                    <span class="mr-3">🧪</span> Products
+                </a>
+                <a href="#" onclick="showSection('customers')" class="sidebar-item flex items-center px-6 py-3 text-gray-700" id="nav-customers">
+                    <span class="mr-3">👥</span> Customers
+                </a>
+                
+                <div class="px-4 mt-6 mb-2">
+                    <p class="text-xs font-semibold text-gray-400 uppercase">Finance</p>
+                </div>
+                <a href="#" onclick="showSection('payroll')" class="sidebar-item flex items-center px-6 py-3 text-gray-700" id="nav-payroll">
+                    <span class="mr-3">💰</span> Payroll
+                </a>
+                <a href="#" onclick="showSection('expenses')" class="sidebar-item flex items-center px-6 py-3 text-gray-700" id="nav-expenses">
+                    <span class="mr-3">💸</span> Expenses
+                </a>
+                <a href="#" onclick="showSection('accounting')" class="sidebar-item flex items-center px-6 py-3 text-gray-700" id="nav-accounting">
+                    <span class="mr-3">📈</span> Accounting
+                </a>
+                
+                <div class="px-4 mt-6 mb-2">
+                    <p class="text-xs font-semibold text-gray-400 uppercase">Analytics</p>
+                </div>
+                <a href="#" onclick="showSection('analysis')" class="sidebar-item flex items-center px-6 py-3 text-gray-700" id="nav-analysis">
+                    <span class="mr-3">📉</span> Analysis
+                </a>
+                
+                <div class="px-4 mt-6 mb-2">
+                    <p class="text-xs font-semibold text-gray-400 uppercase">System</p>
+                </div>
+                <a href="#" onclick="showSection('settings')" class="sidebar-item flex items-center px-6 py-3 text-gray-700" id="nav-settings">
+                    <span class="mr-3">⚙️</span> Settings
+                </a>
+                <a href="#" onclick="showSection('customer-site')" class="sidebar-item flex items-center px-6 py-3 text-gray-700" id="nav-customer-site">
+                    <span class="mr-3">🌐</span> Customer Site
+                </a>
+            </nav>
+            <div class="p-4 border-t">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">A</div>
+                    <div class="ml-3">
+                        <p class="text-sm font-semibold">Admin User</p>
+                        <p class="text-xs text-gray-500">admin@pharmapack.pk</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto bg-gray-50">
+            <!-- Header -->
+            <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center sticky top-0 z-10">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800" id="page-title">Dashboard</h2>
+                    <p class="text-sm text-gray-500" id="page-subtitle">Overview of your business</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="showModal('inquiry-modal')" class="btn-primary text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition">
+                        + New Inquiry
+                    </button>
+                    <div class="relative">
+                        <button class="p-2 text-gray-600 hover:text-blue-600">
+                            🔔
+                            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Sections -->
+            <div class="p-8">
+                <!-- Dashboard Section -->
+                <div id="section-dashboard" class="section">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Total Revenue</p>
+                                    <p class="text-2xl font-bold text-gray-800">PKR 24.8M</p>
+                                    <p class="text-xs text-green-600 mt-1">↑ 12.5% from last month</p>
+                                </div>
+                                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-2xl">💰</div>
+                            </div>
+                        </div>
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Total Orders</p>
+                                    <p class="text-2xl font-bold text-gray-800">1,247</p>
+                                    <p class="text-xs text-green-600 mt-1">↑ 8.3% from last month</p>
+                                </div>
+                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">📦</div>
+                            </div>
+                        </div>
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Active Inquiries</p>
+                                    <p class="text-2xl font-bold text-gray-800">47</p>
+                                    <p class="text-xs text-yellow-600 mt-1">12 need follow-up</p>
+                                </div>
+                                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-2xl">📧</div>
+                            </div>
+                        </div>
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Customer Retention</p>
+                                    <p class="text-2xl font-bold text-gray-800">68.3%</p>
+                                    <p class="text-xs text-green-600 mt-1">↑ 3.2% from last month</p>
+                                </div>
+                                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-2xl">👥</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-lg font-semibold mb-4">Monthly Revenue Trend (2024)</h3>
+                            <canvas id="revenueChart" height="200"></canvas>
+                        </div>
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-lg font-semibold mb-4">Order Source Distribution</h3>
+                            <canvas id="orderSourceChart" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold mb-4">Recent Activities</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">📦</div>
+                                    <div class="ml-4">
+                                        <p class="font-semibold">New Order #ORD-2024-089</p>
+                                        <p class="text-sm text-gray-500">MediCare Hospital - 5,000 units</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm text-gray-400">2 hours ago</span>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">💰</div>
+                                    <div class="ml-4">
+                                        <p class="font-semibold">Payment Received</p>
+                                        <p class="text-sm text-gray-500">PKR 450,000 from PharmaPlus Ltd</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm text-gray-400">5 hours ago</span>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">📧</div>
+                                    <div class="ml-4">
+                                        <p class="font-semibold">New Inquiry</p>
+                                        <p class="text-sm text-gray-500">HealthFirst Clinic - 10cc Amber Ampoules</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm text-gray-400">1 day ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inquiries Section -->
+                <div id="section-inquiries" class="section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex space-x-2">
+                            <button onclick="filterInquiries('all')" class="px-4 py-2 bg-blue-600 text-white rounded-lg">All</button>
+                            <button onclick="filterInquiries('new')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">New</button>
+                            <button onclick="filterInquiries('followup')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Follow-up</button>
+                            <button onclick="filterInquiries('closed')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Closed</button>
+                        </div>
+                        <button onclick="showModal('inquiry-modal')" class="btn-primary text-white px-6 py-2 rounded-lg">+ New Inquiry</button>
+                    </div>
+
+                    <div class="card bg-white rounded-xl shadow-md overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">ID</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Customer</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Product</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Qty</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inquiries-table" class="divide-y divide-gray-200">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Orders Section -->
+                <div id="section-orders" class="section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex space-x-2">
+                            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg">All Orders</button>
+                            <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Pending</button>
+                            <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Processing</button>
+                            <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Completed</button>
+                        </div>
+                        <button onclick="showModal('order-modal')" class="btn-primary text-white px-6 py-2 rounded-lg">+ New Order</button>
+                    </div>
+
+                    <div class="card bg-white rounded-xl shadow-md overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Order #</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Customer</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Products</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Total (PKR)</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table" class="divide-y divide-gray-200">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Products Section -->
+                <div id="section-products" class="section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex space-x-2">
+                            <input type="text" placeholder="Search products..." class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <button onclick="showModal('product-modal')" class="btn-primary text-white px-6 py-2 rounded-lg">+ Add Product</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="products-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Customers Section -->
+                <div id="section-customers" class="section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <input type="text" placeholder="Search customers..." class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button onclick="showModal('customer-modal')" class="btn-primary text-white px-6 py-2 rounded-lg">+ Add Customer</button>
+                    </div>
+
+                    <div class="card bg-white rounded-xl shadow-md overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Business</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Contact</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Payment Terms</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customers-table" class="divide-y divide-gray-200">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Payroll Section -->
+                <div id="section-payroll" class="section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex space-x-4">
+                            <select class="px-4 py-2 border rounded-lg">
+                                <option>All Departments</option>
+                                <option>Production</option>
+                                <option>Sales</option>
+                                <option>Admin</option>
+                            </select>
+                        </div>
+                        <button onclick="showModal('employee-modal')" class="btn-primary text-white px-6 py-2 rounded-lg">+ Add Employee</button>
+                    </div>
+
+                    <div class="card bg-white rounded-xl shadow-md overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Employee</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Role</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Department</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Base Salary</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Loans</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employees-table" class="divide-y divide-gray-200">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Expenses Section -->
+                <div id="section-expenses" class="section hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <p class="text-sm text-gray-500">Total Expenses (Month)</p>
+                            <p class="text-2xl font-bold text-red-600">PKR 1.2M</p>
+                        </div>
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <p class="text-sm text-gray-500">Pending Bills</p>
+                            <p class="text-2xl font-bold text-orange-600">PKR 340K</p>
+                        </div>
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <p class="text-sm text-gray-500">Paid This Month</p>
+                            <p class="text-2xl font-bold text-green-600">PKR 860K</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-6">
+                        <input type="text" placeholder="Search expenses..." class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button onclick="showModal('expense-modal')" class="btn-primary text-white px-6 py-2 rounded-lg">+ Add Expense</button>
+                    </div>
+
+                    <div class="card bg-white rounded-xl shadow-md overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Category</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Description</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Amount (PKR)</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expenses-table" class="divide-y divide-gray-200">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Accounting Section -->
+                <div id="section-accounting" class="section hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <p class="text-sm text-gray-500">Petty Cash</p>
+                            <p class="text-2xl font-bold text-green-600">PKR 125,000</p>
+                        </div>
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <p class="text-sm text-gray-500">Bank Account</p>
+                            <p class="text-2xl font-bold text-blue-600">PKR 3.5M</p>
+                        </div>
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <p class="text-sm text-gray-500">Accounts Receivable</p>
+                            <p class="text-2xl font-bold text-orange-600">PKR 890K</p>
+                        </div>
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <p class="text-sm text-gray-500">Accounts Payable</p>
+                            <p class="text-2xl font-bold text-red-600">PKR 450K</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-lg font-semibold mb-4">Cash Flow Overview</h3>
+                            <canvas id="cashFlowChart" height="200"></canvas>
+                        </div>
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-lg font-semibold mb-4">Employee Loans</h3>
+                            <div id="loans-list" class="space-y-4">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Section -->
+                <div id="section-analysis" class="section hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-lg font-semibold mb-4">Sales by Product Type</h3>
+                            <canvas id="productSalesChart" height="200"></canvas>
+                        </div>
+                        <div class="card bg-white rounded-xl shadow-md p-6">
+                            <h3 class="text-lg font-semibold mb-4">Customer Analytics</h3>
+                            <canvas id="customerAnalyticsChart" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold mb-4">Business Performance Report</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <p class="text-sm text-gray-500">Gross Profit Margin</p>
+                                <p class="text-2xl font-bold text-green-600">32.5%</p>
+                                <p class="text-xs text-gray-400">Industry avg: 28%</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Average Order Value</p>
+                                <p class="text-2xl font-bold text-blue-600">PKR 19,880</p>
+                                <p class="text-xs text-gray-400">↑ 5.2% from last quarter</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Customer Lifetime Value</p>
+                                <p class="text-2xl font-bold text-purple-600">PKR 245,000</p>
+                                <p class="text-xs text-gray-400">Based on 18 months avg</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="section-settings" class="section hidden">
+                    <div class="card bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold mb-6">Company Details</h3>
+                        <form id="settings-form" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                                    <input type="text" value="PharmaPack Solutions (Pvt) Ltd" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Registration Number</label>
+                                    <input type="text" value="1234567-8" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">NTN</label>
+                                    <input type="text" value="1234567-8" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">GST Number</label>
+                                    <input type="text" value="17%" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                                    <textarea class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3">Plot 45, Industrial Area, Phase II, Lahore, Pakistan</textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                                    <input type="text" value="+92 42 12345678" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                    <input type="email" value="info@pharmapack.pk" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary text-white px-6 py-2 rounded-lg">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Customer Site Section -->
+                <div id="section-customer-site" class="section hidden">
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-12 text-center">
+                            <h1 class="text-4xl font-bold mb-4">🏭 PharmaPack Solutions</h1>
+                            <p class="text-xl mb-8">Premium Glass Ampoules for Pharmaceutical Industry</p>
+                            <button onclick="scrollToInquiryForm()" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                                Request Quote
+                            </button>
+                        </div>
+                        
+                        <div class="p-12">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                                <div class="text-center">
+                                    <div class="text-4xl mb-4">🧪</div>
+                                    <h3 class="text-xl font-semibold mb-2">Quality Products</h3>
+                                    <p class="text-gray-600">ISO certified glass ampoules in various sizes</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-4xl mb-4">🚚</div>
+                                    <h3 class="text-xl font-semibold mb-2">Fast Delivery</h3>
+                                    <p class="text-gray-600">Nationwide delivery across Pakistan</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-4xl mb-4">💰</div>
+                                    <h3 class="text-xl font-semibold mb-2">Competitive Pricing</h3>
+                                    <p class="text-gray-600">Best rates with flexible payment terms</p>
+                                </div>
+                            </div>
+
+                            <div id="customer-inquiry-form" class="max-w-2xl mx-auto">
+                                <h2 class="text-2xl font-bold text-center mb-8">Send Us an Inquiry</h2>
+                                <form onsubmit="submitCustomerInquiry(event)" class="space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <input type="text" placeholder="Your Name *" required class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <input type="text" placeholder="Business Name *" required class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <input type="email" placeholder="Email Address *" required class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <input type="tel" placeholder="Phone Number *" required class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <select required class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="">Select Product Type *</option>
+                                            <option value="1cc-transparent">1cc Transparent</option>
+                                            <option value="1cc-amber">1cc Amber</option>
+                                            <option value="2cc-transparent">2cc Transparent</option>
+                                            <option value="2cc-amber">2cc Amber</option>
+                                            <option value="3cc-transparent">3cc Transparent</option>
+                                            <option value="3cc-amber">3cc Amber</option>
+                                            <option value="5cc-transparent">5cc Transparent</option>
+                                            <option value="5cc-amber">5cc Amber</option>
+                                            <option value="10cc-transparent">10cc Transparent</option>
+                                            <option value="10cc-amber">10cc Amber</option>
+                                        </select>
+                                        <input type="number" placeholder="Quantity Required *" required class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <textarea placeholder="Additional Requirements / Message" class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4"></textarea>
+                                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-lg font-semibold">Submit Inquiry</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Inquiry Modal -->
+    <div id="inquiry-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold">New Inquiry</h3>
+                <button onclick="hideModal('inquiry-modal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+            </div>
+            <form onsubmit="submitInquiry(event)" class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
+                        <input type="text" id="inquiry-customer" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Business Name *</label>
+                        <input type="text" id="inquiry-business" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                        <input type="email" id="inquiry-email" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
+                        <input type="tel" id="inquiry-phone" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Product Type *</label>
+                        <select id="inquiry-product" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select Product</option>
+                            <option value="1cc-transparent">1cc Transparent</option>
+                            <option value="1cc-amber">1cc Amber</option>
+                            <option value="2cc-transparent">2cc Transparent</option>
+                            <option value="2cc-amber">2cc Amber</option>
+                            <option value="3cc-transparent">3cc Transparent</option>
+                            <option value="3cc-amber">3cc Amber</option>
+                            <option value="5cc-transparent">5cc Transparent</option>
+                            <option value="5cc-amber">5cc Amber</option>
+                            <option value="10cc-transparent">10cc Transparent</option>
+                            <option value="10cc-amber">10cc Amber</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantity *</label>
+                        <input type="number" id="inquiry-qty" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                    <textarea id="inquiry-notes" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+                </div>
+                <div class="flex justify-end space-x-4 pt-4">
+                    <button type="button" onclick="hideModal('inquiry-modal')" class="px-6 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="btn-primary text-white px-6 py-2 rounded-lg">Save Inquiry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Invoice Modal -->
+    <div id="invoice-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold">Process Invoice</h3>
+                <button onclick="hideModal('invoice-modal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+            </div>
+            <div class="p-6">
+                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Customer</p>
+                            <p class="font-semibold" id="invoice-customer">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Business</p>
+                            <p class="font-semibold" id="invoice-business">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Product</p>
+                            <p class="font-semibold" id="invoice-product">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Quantity</p>
+                            <p class="font-semibold" id="invoice-qty">-</p>
+                        </div>
+                    </div>
+                </div>
+                <form onsubmit="submitInvoice(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Unit Price (PKR)</label>
+                            <input type="number" id="invoice-price" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tax Rate (%)</label>
+                            <input type="number" id="invoice-tax" value="17" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Terms</label>
+                        <select id="invoice-terms" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="cash">Cash on Delivery</option>
+                            <option value="credit-30">Credit 30 Days</option>
+                            <option value="credit-60">Credit 60 Days</option>
+                            <option value="advance">50% Advance</option>
+                        </select>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <div class="flex justify-between mb-2">
+                            <span>Subtotal:</span>
+                            <span id="invoice-subtotal">PKR 0</span>
+                        </div>
+                        <div class="flex justify-between mb-2">
+                            <span>Tax (17%):</span>
+                            <span id="invoice-tax-amount">PKR 0</span>
+                        </div>
+                        <div class="flex justify-between font-bold text-lg border-t pt-2">
+                            <span>Total:</span>
+                            <span id="invoice-total">PKR 0</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-4 pt-4">
+                        <button type="button" onclick="hideModal('invoice-modal')" class="px-6 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                        <button type="submit" class="btn-primary text-white px-6 py-2 rounded-lg">Generate Invoice</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="product-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold">Add/Edit Product</h3>
+                <button onclick="hideModal('product-modal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+            </div>
+            <form onsubmit="submitProduct(event)" class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
+                        <input type="text" id="product-name" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Specification *</label>
+                        <input type="text" id="product-spec" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Base Price (PKR) *</label>
+                        <input type="number" id="product-price" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Stock Quantity *</label>
+                        <input type="number" id="product-stock" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Color Variant</label>
+                    <select id="product-color" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="transparent">Transparent</option>
+                        <option value="amber">Amber</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-4 pt-4">
+                    <button type="button" onclick="hideModal('product-modal')" class="px-6 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="btn-primary text-white px-6 py-2 rounded-lg">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer Modal -->
+    <div id="customer-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold">Add/Edit Customer</h3>
+                <button onclick="hideModal('customer-modal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+            </div>
+            <form onsubmit="submitCustomer(event)" class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
+                        <input type="text" id="customer-name" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Business Name *</label>
+                        <input type="text" id="customer-business" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Role in Business</label>
+                        <input type="text" id="customer-role" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                        <input type="email" id="customer-email" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
+                        <input type="tel" id="customer-phone" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Terms</label>
+                        <select id="customer-terms" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="cash">Cash</option>
+                            <option value="credit-30">Credit 30 Days</option>
+                            <option value="credit-60">Credit 60 Days</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                    <textarea id="customer-address" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="2"></textarea>
+                </div>
+                <div class="flex justify-end space-x-4 pt-4">
+                    <button type="button" onclick="hideModal('customer-modal')" class="px-6 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="btn-primary text-white px-6 py-2 rounded-lg">Save Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Employee Modal -->
+    <div id="employee-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold">Add/Edit Employee</h3>
+                <button onclick="hideModal('employee-modal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+            </div>
+            <form onsubmit="submitEmployee(event)" class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Employee Name *</label>
+                        <input type="text" id="employee-name" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Role/Position *</label>
+                        <input type="text" id="employee-role" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Department *</label>
+                        <select id="employee-dept" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="production">Production</option>
+                            <option value="sales">Sales</option>
+                            <option value="admin">Admin</option>
+                            <option value="quality">Quality Control</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Base Salary (PKR) *</label>
+                        <input type="number" id="employee-salary" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="employee-email" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                        <input type="tel" id="employee-phone" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Outstanding Loan (PKR)</label>
+                    <input type="number" id="employee-loan" value="0" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end space-x-4 pt-4">
+                    <button type="button" onclick="hideModal('employee-modal')" class="px-6 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="btn-primary text-white px-6 py-2 rounded-lg">Save Employee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expense-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold">Add Expense</h3>
+                <button onclick="hideModal('expense-modal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+            </div>
+            <form onsubmit="submitExpense(event)" class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                        <select id="expense-category" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="utilities">Utilities</option>
+                            <option value="rent">Rent</option>
+                            <option value="salaries">Salaries</option>
+                            <option value="raw-materials">Raw Materials</option>
+                            <option value="transport">Transport</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount (PKR) *</label>
+                        <input type="number" id="expense-amount" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                    <input type="text" id="expense-desc" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                    <input type="date" id="expense-date" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end space-x-4 pt-4">
+                    <button type="button" onclick="hideModal('expense-modal')" class="px-6 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="btn-primary text-white px-6 py-2 rounded-lg">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Modal -->
+    <div id="order-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold">Add Order</h3>
+                <button onclick="hideModal('order-modal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+            </div>
+            <form onsubmit="submitOrder(event)" class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Customer *</label>
+                        <select id="order-customer" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Product *</label>
+                        <select id="order-product" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantity *</label>
+                        <input type="number" id="order-qty" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Unit Price (PKR)</label>
+                        <input type="number" id="order-price" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-4 pt-4">
+                    <button type="button" onclick="hideModal('order-modal')" class="px-6 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="btn-primary text-white px-6 py-2 rounded-lg">Create Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data Store
+        let inquiries = [
+            { id: 'INQ-001', customer: 'Dr. Ahmed Khan', business: 'MediCare Hospital', email: 'ahmed@medicare.pk', phone: '0300-1234567', product: '5cc-transparent', qty: 5000, status: 'new', date: '2024-01-15', notes: 'Urgent requirement' },
+            { id: 'INQ-002', customer: 'Sarah Ali', business: 'PharmaPlus Ltd', email: 'sarah@pharmaplus.pk', phone: '0301-2345678', product: '10cc-amber', qty: 3000, status: 'followup', date: '2024-01-14', notes: 'Follow up on pricing' },
+            { id: 'INQ-003', customer: 'Muhammad Hassan', business: 'HealthFirst Clinic', email: 'hassan@healthfirst.pk', phone: '0302-3456789', product: '2cc-transparent', qty: 10000, status: 'new', date: '2024-01-13', notes: '' },
+            { id: 'INQ-004', customer: 'Fatima Sheikh', business: 'CureWell Pharmaceuticals', email: 'fatima@curewell.pk', phone: '0303-4567890', product: '3cc-amber', qty: 7500, status: 'closed', date: '2024-01-10', notes: 'Converted to order' },
+            { id: 'INQ-005', customer: 'Ali Raza', business: 'MediSupply Co', email: 'ali@medisupply.pk', phone: '0304-5678901', product: '1cc-transparent', qty: 15000, status: 'converted', date: '2024-01-08', notes: 'Order #ORD-2024-085' }
+        ];
+
+        let orders = [
+            { id: 'ORD-2024-089', customer: 'MediCare Hospital', products: '5cc Transparent x 5000', total: 250000, status: 'processing', date: '2024-01-15', fromInquiry: 'INQ-001' },
+            { id: 'ORD-2024-088', customer: 'PharmaPlus Ltd', products: '10cc Amber x 3000', total: 180000, status: 'completed', date: '2024-01-14', fromInquiry: null },
+            { id: 'ORD-2024-087', customer: 'CureWell Pharmaceuticals', products: '3cc Amber x 7500', total: 337500, status: 'completed', date: '2024-01-10', fromInquiry: 'INQ-004' },
+            { id: 'ORD-2024-086', customer: 'HealthCare Institute', products: '2cc Transparent x 8000', total: 320000, status: 'pending', date: '2024-01-09', fromInquiry: null },
+            { id: 'ORD-2024-085', customer: 'MediSupply Co', products: '1cc Transparent x 15000', total: 450000, status: 'completed', date: '2024-01-08', fromInquiry: 'INQ-005' }
+        ];
+
+        let products = [
+            { id: 1, name: 'Glass Ampoule 1cc', spec: '1ml capacity', price: 25, stock: 50000, color: 'transparent' },
+            { id: 2, name: 'Glass Ampoule 1cc', spec: '1ml capacity', price: 28, stock: 30000, color: 'amber' },
+            { id: 3, name: 'Glass Ampoule 2cc', spec: '2ml capacity', price: 35, stock: 45000, color: 'transparent' },
+            { id: 4, name: 'Glass Ampoule 2cc', spec: '2ml capacity', price: 38, stock: 25000, color: 'amber' },
+            { id: 5, name: 'Glass Ampoule 3cc', spec: '3ml capacity', price: 42, stock: 40000, color: 'transparent' },
+            { id: 6, name: 'Glass Ampoule 3cc', spec: '3ml capacity', price: 45, stock: 20000, color: 'amber' },
+            { id: 7, name: 'Glass Ampoule 5cc', spec: '5ml capacity', price: 50, stock: 35000, color: 'transparent' },
+            { id: 8, name: 'Glass Ampoule 5cc', spec: '5ml capacity', price: 55, stock: 18000, color: 'amber' },
+            { id: 9, name: 'Glass Ampoule 10cc', spec: '10ml capacity', price: 65, stock: 30000, color: 'transparent' },
+            { id: 10, name: 'Glass Ampoule 10cc', spec: '10ml capacity', price: 70, stock: 15000, color: 'amber' }
+        ];
+
+        let customers = [
+            { id: 1, name: 'Dr. Ahmed Khan', business: 'MediCare Hospital', role: 'Procurement Manager', email: 'ahmed@medicare.pk', phone: '0300-1234567', address: 'Lahore', terms: 'credit-30' },
+            { id: 2, name: 'Sarah Ali', business: 'PharmaPlus Ltd', role: 'Owner', email: 'sarah@pharmaplus.pk', phone: '0301-2345678', address: 'Karachi', terms: 'cash' },
+            { id: 3, name: 'Muhammad Hassan', business: 'HealthFirst Clinic', role: 'Director', email: 'hassan@healthfirst.pk', phone: '0302-3456789', address: 'Islamabad', terms: 'credit-60' },
+            { id: 4, name: 'Fatima Sheikh', business: 'CureWell Pharmaceuticals', role: 'CEO', email: 'fatima@curewell.pk', phone: '0303-4567890', address: 'Rawalpindi', terms: 'credit-30' },
+            { id: 5, name: 'Ali Raza', business: 'MediSupply Co', role: 'Purchasing Head', email: 'ali@medisupply.pk', phone: '0304-5678901', address: 'Faisalabad', terms: 'cash' }
+        ];
+
+        let employees = [
+            { id: 1, name: 'Bilal Ahmed', role: 'Production Manager', department: 'production', salary: 150000, email: 'bilal@pharmapack.pk', phone: '0300-1111111', loan: 50000 },
+            { id: 2, name: 'Ayesha Malik', role: 'Sales Executive', department: 'sales', salary: 80000, email: 'ayesha@pharmapack.pk', phone: '0300-2222222', loan: 0 },
+            { id: 3, name: 'Usman Tariq', role: 'Quality Inspector', department: 'quality', salary: 70000, email: 'usman@pharmapack.pk', phone: '0300-3333333', loan: 25000 },
+            { id: 4, name: 'Zainab Khan', role: 'Admin Officer', department: 'admin', salary: 60000, email: 'zainab@pharmapack.pk', phone: '0300-4444444', loan: 0 },
+            { id: 5, name: 'Hassan Ali', role: 'Machine Operator', department: 'production', salary: 45000, email: 'hassan@pharmapack.pk', phone: '0300-5555555', loan: 15000 }
+        ];
+
+        let expenses = [
+            { id: 1, date: '2024-01-15', category: 'utilities', description: 'Electricity Bill', amount: 85000, status: 'paid' },
+            { id: 2, date: '2024-01-14', category: 'raw-materials', description: 'Glass Raw Material', amount: 450000, status: 'paid' },
+            { id: 3, date: '2024-01-13', category: 'salaries', description: 'Staff Salaries', amount: 405000, status: 'paid' },
+            { id: 4, date: '2024-01-12', category: 'transport', description: 'Delivery Charges', amount: 25000, status: 'pending' },
+            { id: 5, date: '2024-01-10', category: 'maintenance', description: 'Machine Repair', amount: 35000, status: 'paid' }
+        ];
+
+        let currentInquiryId = null;
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
+            document.getElementById('section-' + sectionId).classList.remove('hidden');
+            
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-' + sectionId).classList.add('active');
+            
+            const titles = {
+                'dashboard': ['Dashboard', 'Overview of your business'],
+                'inquiries': ['Inquiries', 'Manage customer inquiries'],
+                'orders': ['Orders', 'Track and manage orders'],
+                'products': ['Products', 'Product inventory management'],
+                'customers': ['Customers', 'Customer relationship management'],
+                'payroll': ['Payroll', 'Employee management & wages'],
+                'expenses': ['Expenses', 'Track business expenses'],
+                'accounting': ['Accounting', 'Financial management'],
+                'analysis': ['Analysis', 'Business analytics & reports'],
+                'settings': ['Settings', 'Company configuration'],
+                'customer-site': ['Customer Website', 'Public inquiry portal']
+            };
+            
+            document.getElementById('page-title').textContent = titles[sectionId][0];
+            document.getElementById('page-subtitle').textContent = titles[sectionId][1];
+            
+            if (sectionId === 'inquiries') renderInquiries();
+            if (sectionId === 'orders') renderOrders();
+            if (sectionId === 'products') renderProducts();
+            if (sectionId === 'customers') renderCustomers();
+            if (sectionId === 'payroll') renderEmployees();
+            if (sectionId === 'expenses') renderExpenses();
+            if (sectionId === 'accounting') renderLoans();
+        }
+
+        // Modal Functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            document.getElementById(modalId).classList.add('flex');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.getElementById(modalId).classList.remove('flex');
+        }
+
+        // Render Functions
+        function renderInquiries(filter = 'all') {
+            const tbody = document.getElementById('inquiries-table');
+            let filtered = inquiries;
+            
+            if (filter !== 'all') {
+                filtered = inquiries.filter(i => i.status === filter);
+            }
+            
+            tbody.innerHTML = filtered.map(inquiry => {
+                const statusClass = {
+                    'new': 'status-new',
+                    'followup': 'status-followup',
+                    'closed': 'status-closed',
+                    'converted': 'status-converted'
+                }[inquiry.status];
+                
+                const statusLabel = {
+                    'new': 'New',
+                    'followup': 'Follow-up',
+                    'closed': 'Closed',
+                    'converted': 'Converted'
+                }[inquiry.status];
+                
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm font-semibold text-gray-800">${inquiry.id}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <p class="font-semibold">${inquiry.customer}</p>
+                            <p class="text-gray-500 text-xs">${inquiry.business}</p>
+                        </td>
+                        <td class="px-6 py-4 text-sm">${inquiry.product}</td>
+                        <td class="px-6 py-4 text-sm">${inquiry.qty.toLocaleString()}</td>
+                        <td class="px-6 py-4"><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${inquiry.date}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex space-x-2">
+                                ${inquiry.status !== 'converted' && inquiry.status !== 'closed' ? `
+                                    <button onclick="processInvoice('${inquiry.id}')" class="text-blue-600 hover:text-blue-800 text-sm">📄 Invoice</button>
+                                    <button onclick="convertToOrder('${inquiry.id}')" class="text-green-600 hover:text-green-800 text-sm">✓ Convert</button>
+                                ` : ''}
+                                <button onclick="editInquiry('${inquiry.id}')" class="text-yellow-600 hover:text-yellow-800 text-sm">✏️</button>
+                                <button onclick="deleteInquiry('${inquiry.id}')" class="text-red-600 hover:text-red-800 text-sm">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('inquiry-count').textContent = inquiries.filter(i => i.status === 'new').length;
+        }
+
+        function renderOrders() {
+            const tbody = document.getElementById('orders-table');
+            tbody.innerHTML = orders.map(order => {
+                const statusClass = {
+                    'pending': 'status-followup',
+                    'processing': 'status-new',
+                    'completed': 'status-closed'
+                }[order.status];
+                
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm font-semibold text-gray-800">${order.id}</td>
+                        <td class="px-6 py-4 text-sm">${order.customer}</td>
+                        <td class="px-6 py-4 text-sm">${order.products}</td>
+                        <td class="px-6 py-4 text-sm font-semibold">PKR ${order.total.toLocaleString()}</td>
+                        <td class="px-6 py-4"><span class="status-badge ${statusClass}">${order.status}</span></td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${order.date}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex space-x-2">
+                                <button onclick="viewOrder('${order.id}')" class="text-blue-600 hover:text-blue-800 text-sm">👁️</button>
+                                <button onclick="editOrder('${order.id}')" class="text-yellow-600 hover:text-yellow-800 text-sm">✏️</button>
+                                <button onclick="deleteOrder('${order.id}')" class="text-red-600 hover:text-red-800 text-sm">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = products.map(product => `
+                <div class="card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="font-semibold text-lg">${product.name}</h3>
+                            <p class="text-sm text-gray-500">${product.spec}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold ${product.color === 'transparent' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}">${product.color}</span>
+                    </div>
+                    <div class="space-y-2 mb-4">
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-500">Price:</span>
+                            <span class="font-semibold">PKR ${product.price}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-500">Stock:</span>
+                            <span class="font-semibold ${product.stock < 20000 ? 'text-red-600' : 'text-green-600'}">${product.stock.toLocaleString()}</span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="editProduct(${product.id})" class="flex-1 bg-blue-50 text-blue-600 py-2 rounded-lg hover:bg-blue-100">Edit</button>
+                        <button onclick="deleteProduct(${product.id})" class="flex-1 bg-red-50 text-red-600 py-2 rounded-lg hover:bg-red-100">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCustomers() {
+            const tbody = document.getElementById('customers-table');
+            tbody.innerHTML = customers.map(customer => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <p class="font-semibold">${customer.name}</p>
+                        <p class="text-sm text-gray-500">${customer.email}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="font-semibold">${customer.business}</p>
+                        <p class="text-sm text-gray-500">${customer.role}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p>${customer.phone}</p>
+                        <p class="text-sm text-gray-500">${customer.address}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="status-badge ${customer.terms === 'cash' ? 'status-closed' : 'status-followup'}">${customer.terms}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex space-x-2">
+                            <button onclick="editCustomer(${customer.id})" class="text-yellow-600 hover:text-yellow-800">✏️</button>
+                            <button onclick="deleteCustomer(${customer.id})" class="text-red-600 hover:text-red-800">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderEmployees() {
+            const tbody = document.getElementById('employees-table');
+            tbody.innerHTML = employees.map(emp => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <p class="font-semibold">${emp.name}</p>
+                        <p class="text-sm text-gray-500">${emp.email}</p>
+                    </td>
+                    <td class="px-6 py-4">${emp.role}</td>
+                    <td class="px-6 py-4"><span class="status-badge status-new">${emp.department}</span></td>
+                    <td class="px-6 py-4 font-semibold">PKR ${emp.salary.toLocaleString()}</td>
+                    <td class="px-6 py-4">${emp.loan > 0 ? `<span class="text-red-600">PKR ${emp.loan.toLocaleString()}</span>` : '<span class="text-green-600">None</span>'}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex space-x-2">
+                            <button onclick="viewEmployee(${emp.id})" class="text-blue-600 hover:text-blue-800">👁️</button>
+                            <button onclick="editEmployee(${emp.id})" class="text-yellow-600 hover:text-yellow-800">✏️</button>
+                            <button onclick="deleteEmployee(${emp.id})" class="text-red-600 hover:text-red-800">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderExpenses() {
+            const tbody = document.getElementById('expenses-table');
+            tbody.innerHTML = expenses.map(exp => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm">${exp.date}</td>
+                    <td class="px-6 py-4"><span class="status-badge status-new">${exp.category}</span></td>
+                    <td class="px-6 py-4">${exp.description}</td>
+                    <td class="px-6 py-4 font-semibold">PKR ${exp.amount.toLocaleString()}</td>
+                    <td class="px-6 py-4"><span class="status-badge ${exp.status === 'paid' ? 'status-closed' : 'status-followup'}">${exp.status}</span></td>
+                    <td class="px-6 py-4">
+                        <div class="flex space-x-2">
+                            <button onclick="editExpense(${exp.id})" class="text-yellow-600 hover:text-yellow-800">✏️</button>
+                            <button onclick="deleteExpense(${exp.id})" class="text-red-600 hover:text-red-800">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderLoans() {
+            const list = document.getElementById('loans-list');
+            const loans = employees.filter(e => e.loan > 0);
+            list.innerHTML = loans.length > 0 ? loans.map(emp => `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <p class="font-semibold">${emp.name}</p>
+                        <p class="text-sm text-gray-500">${emp.role}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-semibold text-red-600">PKR ${emp.loan.toLocaleString()}</p>
+                        <button onclick="clearLoan(${emp.id})" class="text-xs text-blue-600 hover:underline">Clear Loan</button>
+                    </div>
+                </div>
+            `).join('') : '<p class="text-gray-500 text-center py-4">No outstanding loans</p>';
+        }
+
+        // Inquiry Actions
+        function filterInquiries(filter) {
+            renderInquiries(filter);
+        }
+
+        function submitInquiry(e) {
+            e.preventDefault();
+            const newInquiry = {
+                id: 'INQ-' + String(inquiries.length + 1).padStart(3, '0'),
+                customer: document.getElementById('inquiry-customer').value,
+                business: document.getElementById('inquiry-business').value,
+                email: document.getElementById('inquiry-email').value,
+                phone: document.getElementById('inquiry-phone').value,
+                product: document.getElementById('inquiry-product').value,
+                qty: parseInt(document.getElementById('inquiry-qty').value),
+                status: 'new',
+                date: new Date().toISOString().split('T')[0],
+                notes: document.getElementById('inquiry-notes').value
+            };
+            
+            if (currentInquiryId) {
+                const index = inquiries.findIndex(i => i.id === currentInquiryId);
+                inquiries[index] = { ...inquiries[index], ...newInquiry };
+            } else {
+                inquiries.unshift(newInquiry);
+            }
+            
+            hideModal('inquiry-modal');
+            renderInquiries();
+            showNotification('Inquiry saved successfully!');
+        }
+
+        function editInquiry(id) {
+            const inquiry = inquiries.find(i => i.id === id);
+            if (!inquiry) return;
+            
+            currentInquiryId = id;
+            document.getElementById('inquiry-customer').value = inquiry.customer;
+            document.getElementById('inquiry-business').value = inquiry.business;
+            document.getElementById('inquiry-email').value = inquiry.email;
+            document.getElementById('inquiry-phone').value = inquiry.phone;
+            document.getElementById('inquiry-product').value = inquiry.product;
+            document.getElementById('inquiry-qty').value = inquiry.qty;
+            document.getElementById('inquiry-notes').value = inquiry.notes || '';
+            
+            showModal('inquiry-modal');
+        }
+
+        function deleteInquiry(id) {
+            if (confirm('Are you sure you want to delete this inquiry?')) {
+                inquiries = inquiries.filter(i => i.id !== id);
+                renderInquiries();
+                showNotification('Inquiry deleted!');
+            }
+        }
+
+        function processInvoice(id) {
+            const inquiry = inquiries.find(i => i.id === id);
+            if (!inquiry) return;
+            
+            currentInquiryId = id;
+            document.getElementById('invoice-customer').textContent = inquiry.customer;
+            document.getElementById('invoice-business').textContent = inquiry.business;
+            document.getElementById('invoice-product').textContent = inquiry.product;
+            document.getElementById('invoice-qty').textContent = inquiry.qty.toLocaleString();
+            
+            const product = products.find(p => (p.name.includes(inquiry.product.split('-')[0]) && p.color === inquiry.product.split('-')[1]));
+            document.getElementById('invoice-price').value = product ? product.price : 0;
+            
+            calculateInvoice();
+            showModal('invoice-modal');
+        }
+
+        function calculateInvoice() {
+            const qty = parseInt(document.getElementById('invoice-qty').textContent.replace(/,/g, ''));
+            const price = parseFloat(document.getElementById('invoice-price').value) || 0;
+            const taxRate = parseFloat(document.getElementById('invoice-tax').value) || 17;
+            
+            const subtotal = qty * price;
+            const tax = subtotal * (taxRate / 100);
+            const total = subtotal + tax;
+            
+            document.getElementById('invoice-subtotal').textContent = 'PKR ' + subtotal.toLocaleString();
+            document.getElementById('invoice-tax-amount').textContent = 'PKR ' + tax.toLocaleString();
+            document.getElementById('invoice-total').textContent = 'PKR ' + total.toLocaleString();
+        }
+
+        function submitInvoice(e) {
+            e.preventDefault();
+            const inquiry = inquiries.find(i => i.id === currentInquiryId);
+            if (!inquiry) return;
+            
+            const newOrder = {
+                id: 'ORD-2024-' + String(orders.length + 1).padStart(3, '0'),
+                customer: inquiry.business,
+                products: `${inquiry.product} x ${inquiry.qty}`,
+                total: parseInt(document.getElementById('invoice-total').textContent.replace(/[^0-9]/g, '')),
+                status: 'pending',
+                date: new Date().toISOString().split('T')[0],
+                fromInquiry: currentInquiryId
+            };
+            
+            orders.unshift(newOrder);
+            inquiry.status = 'converted';
+            
+            hideModal('invoice-modal');
+            renderInquiries();
+            showNotification('Invoice processed & Order created!');
+        }
+
+        function convertToOrder(id) {
+            const inquiry = inquiries.find(i => i.id === id);
+            if (!inquiry) return;
+            
+            if (confirm('Convert this inquiry to an order?')) {
+                inquiry.status = 'converted';
+                renderInquiries();
+                showNotification('Inquiry converted!');
+            }
+        }
+
+        // Product Actions
+        function submitProduct(e) {
+            e.preventDefault();
+            const newProduct = {
+                id: products.length + 1,
+                name: document.getElementById('product-name').value,
+                spec: document.getElementById('product-spec').value,
+                price: parseInt(document.getElementById('product-price').value),
+                stock: parseInt(document.getElementById('product-stock').value),
+                color: document.getElementById('product-color').value
+            };
+            
+            products.push(newProduct);
+            hideModal('product-modal');
+            renderProducts();
+            showNotification('Product saved!');
+        }
+
+        function editProduct(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+            
+            document.getElementById('product-name').value = product.name;
+            document.getElementById('product-spec').value = product.spec;
+            document.getElementById('product-price').value = product.price;
+            document.getElementById('product-stock').value = product.stock;
+            document.getElementById('product-color').value = product.color;
+            
+            showModal('product-modal');
+        }
+
+        function deleteProduct(id) {
+            if (confirm('Delete this product?')) {
+                products = products.filter(p => p.id !== id);
+                renderProducts();
+                showNotification('Product deleted!');
+            }
+        }
+
+        // Customer Actions
+        function submitCustomer(e) {
+            e.preventDefault();
+            const newCustomer = {
+                id: customers.length + 1,
+                name: document.getElementById('customer-name').value,
+                business: document.getElementById('customer-business').value,
+                role: document.getElementById('customer-role').value,
+                email: document.getElementById('customer-email').value,
+                phone: document.getElementById('customer-phone').value,
+                address: document.getElementById('customer-address').value,
+                terms: document.getElementById('customer-terms').value
+            };
+            
+            customers.push(newCustomer);
+            hideModal('customer-modal');
+            renderCustomers();
+            showNotification('Customer saved!');
+        }
+
+        function editCustomer(id) {
+            const customer = customers.find(c => c.id === id);
+            if (!customer) return;
+            
+            document.getElementById('customer-name').value = customer.name;
+            document.getElementById('customer-business').value = customer.business;
+            document.getElementById('customer-role').value = customer.role;
+            document.getElementById('customer-email').value = customer.email;
+            document.getElementById('customer-phone').value = customer.phone;
+            document.getElementById('customer-address').value = customer.address;
+            document.getElementById('customer-terms').value = customer.terms;
+            
+            showModal('customer-modal');
+        }
+
+        function deleteCustomer(id) {
+            if (confirm('Delete this customer?')) {
+                customers = customers.filter(c => c.id !== id);
+                renderCustomers();
+                showNotification('Customer deleted!');
+            }
+        }
+
+        // Employee Actions
+        function submitEmployee(e) {
+            e.preventDefault();
+            const newEmployee = {
+                id: employees.length + 1,
+                name: document.getElementById('employee-name').value,
+                role: document.getElementById('employee-role').value,
+                department: document.getElementById('employee-dept').value,
+                salary: parseInt(document.getElementById('employee-salary').value),
+                email: document.getElementById('employee-email').value,
+                phone: document.getElementById('employee-phone').value,
+                loan: parseInt(document.getElementById('employee-loan').value) || 0
+            };
+            
+            employees.push(newEmployee);
+            hideModal('employee-modal');
+            renderEmployees();
+            renderLoans();
+            showNotification('Employee saved!');
+        }
+
+        function editEmployee(id) {
+            const emp = employees.find(e => e.id === id);
+            if (!emp) return;
+            
+            document.getElementById('employee-name').value = emp.name;
+            document.getElementById('employee-role').value = emp.role;
+            document.getElementById('employee-dept').value = emp.department;
+            document.getElementById('employee-salary').value = emp.salary;
+            document.getElementById('employee-email').value = emp.email;
+            document.getElementById('employee-phone').value = emp.phone;
+            document.getElementById('employee-loan').value = emp.loan;
+            
+            showModal('employee-modal');
+        }
+
+        function deleteEmployee(id) {
+            if (confirm('Delete this employee?')) {
+                employees = employees.filter(e => e.id !== id);
+                renderEmployees();
+                renderLoans();
+                showNotification('Employee deleted!');
+            }
+        }
+
+        function viewEmployee(id) {
+            const emp = employees.find(e => e.id === id);
+            if (!emp) return;
+            alert(`Employee Details:\n\nName: ${emp.name}\nRole: ${emp.role}\nDepartment: ${emp.department}\nSalary: PKR ${emp.salary.toLocaleString()}\nEmail: ${emp.email}\nPhone: ${emp.phone}\nOutstanding Loan: PKR ${emp.loan.toLocaleString()}`);
+        }
+
+        function clearLoan(id) {
+            const emp = employees.find(e => e.id === id);
+            if (!emp) return;
+            
+            if (confirm(`Clear loan of PKR ${emp.loan.toLocaleString()} for ${emp.name}?`)) {
+                emp.loan = 0;
+                renderLoans();
+                showNotification('Loan cleared!');
+            }
+        }
+
+        // Expense Actions
+        function submitExpense(e) {
+            e.preventDefault();
+            const newExpense = {
+                id: expenses.length + 1,
+                date: document.getElementById('expense-date').value || new Date().toISOString().split('T')[0],
+                category: document.getElementById('expense-category').value,
+                description: document.getElementById('expense-desc').value,
+                amount: parseInt(document.getElementById('expense-amount').value),
+                status: 'pending'
+            };
+            
+            expenses.unshift(newExpense);
+            hideModal('expense-modal');
+            renderExpenses();
+            showNotification('Expense added!');
+        }
+
+        function editExpense(id) {
+            const exp = expenses.find(e => e.id === id);
+            if (!exp) return;
+            
+            document.getElementById('expense-date').value = exp.date;
+            document.getElementById('expense-category').value = exp.category;
+            document.getElementById('expense-desc').value = exp.description;
+            document.getElementById('expense-amount').value = exp.amount;
+            
+            showModal('expense-modal');
+        }
+
+        function deleteExpense(id) {
+            if (confirm('Delete this expense?')) {
+                expenses = expenses.filter(e => e.id !== id);
+                renderExpenses();
+                showNotification('Expense deleted!');
+            }
+        }
+
+        // Order Actions
+        function submitOrder(e) {
+            e.preventDefault();
+            const newOrder = {
+                id: 'ORD-2024-' + String(orders.length + 1).padStart(3, '0'),
+                customer: document.getElementById('order-customer').value,
+                products: `${document.getElementById('order-product').value} x ${document.getElementById('order-qty').value}`,
+                total: parseInt(document.getElementById('order-qty').value) * parseInt(document.getElementById('order-price').value || 50),
+                status: 'pending',
+                date: new Date().toISOString().split('T')[0],
+                fromInquiry: null
+            };
+            
+            orders.unshift(newOrder);
+            hideModal('order-modal');
+            renderOrders();
+            showNotification('Order created!');
+        }
+
+        function viewOrder(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+            alert(`Order Details:\n\nOrder #: ${order.id}\nCustomer: ${order.customer}\nProducts: ${order.products}\nTotal: PKR ${order.total.toLocaleString()}\nStatus: ${order.status}\nDate: ${order.date}`);
+        }
+
+        function editOrder(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+            alert('Edit order functionality - would open edit modal');
+        }
+
+        function deleteOrder(id) {
+            if (confirm('Delete this order?')) {
+                orders = orders.filter(o => o.id !== id);
+                renderOrders();
+                showNotification('Order deleted!');
+            }
+        }
+
+        // Customer Site
+        function scrollToInquiryForm() {
+            document.getElementById('customer-inquiry-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function submitCustomerInquiry(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            const newInquiry = {
+                id: 'INQ-' + String(inquiries.length + 1).padStart(3, '0'),
+                customer: e.target.elements[0].value,
+                business: e.target.elements[1].value,
+                email: e.target.elements[2].value,
+                phone: e.target.elements[3].value,
+                product: e.target.elements[4].value,
+                qty: parseInt(e.target.elements[5].value),
+                status: 'new',
+                date: new Date().toISOString().split('T')[0],
+                notes: e.target.elements[6].value
+            };
+            
+            inquiries.unshift(newInquiry);
+            e.target.reset();
+            showNotification('Inquiry submitted successfully! We will contact you soon.');
+            document.getElementById('inquiry-count').textContent = inquiries.filter(i => i.status === 'new').length;
+        }
+
+        // Notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-pulse';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Initialize Charts
+        function initCharts() {
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'line',
+                 {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue (PKR)',
+                         [3.2, 3.8, 4.1, 3.9, 4.5, 5.3],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // Order Source Chart
+            const orderCtx = document.getElementById('orderSourceChart').getContext('2d');
+            new Chart(orderCtx, {
+                type: 'doughnut',
+                 {
+                    labels: ['Local Hospitals', 'Private Clinics', 'Pharmacy Chains', 'Online'],
+                    datasets: [{
+                         [45, 25, 20, 10],
+                        backgroundColor: ['#3b82f6', '#60a5fa', '#93c5fd', '#dbeafe']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
+
+            // Cash Flow Chart
+            const cashCtx = document.getElementById('cashFlowChart').getContext('2d');
+            new Chart(cashCtx, {
+                type: 'bar',
+                 {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Income',
+                        data: [4.2, 4.8, 5.1, 4.9, 5.5, 6.3],
+                        backgroundColor: '#10b981'
+                    }, {
+                        label: 'Expenses',
+                        data: [2.1, 2.4, 2.6, 2.3, 2.8, 3.1],
+                        backgroundColor: '#ef4444'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // Product Sales Chart
+            const productCtx = document.getElementById('productSalesChart').getContext('2d');
+            new Chart(productCtx, {
+                type: 'bar',
+                 {
+                    labels: ['1cc', '2cc', '3cc', '5cc', '10cc'],
+                    datasets: [{
+                        label: 'Transparent',
+                         [15000, 12000, 10000, 8000, 6000],
+                        backgroundColor: '#3b82f6'
+                    }, {
+                        label: 'Amber',
+                         [8000, 6000, 5000, 4000, 3000],
+                        backgroundColor: '#f59e0b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // Customer Analytics Chart
+            const customerCtx = document.getElementById('customerAnalyticsChart').getContext('2d');
+            new Chart(customerCtx, {
+                type: 'line',
+                 {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'New Customers',
+                        data: [12, 15, 18, 14, 20, 22],
+                        borderColor: '#8b5cf6',
+                        tension: 0.4
+                    }, {
+                        label: 'Returning Customers',
+                        data: [45, 48, 52, 50, 55, 58],
+                        borderColor: '#10b981',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        }
+
+        // Event Listeners
+        document.getElementById('invoice-price').addEventListener('input', calculateInvoice);
+        document.getElementById('invoice-tax').addEventListener('input', calculateInvoice);
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            renderInquiries();
+            renderOrders();
+            renderProducts();
+            renderCustomers();
+            renderEmployees();
+            renderExpenses();
+            renderLoans();
+        });
+    </script>
+</body>
+</html>
