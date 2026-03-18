@@ -472,7 +472,6 @@ def index():
     grouped_products = group_products_by_base()
     
     # 2. Render the EXISTING template 'customer-site.html'
-    # Do NOT use 'index.html' because that file does not exist.
     return render_template('customer-site.html', products=grouped_products)
 
 @main_bp.route('/login', methods=['GET', 'POST'])
