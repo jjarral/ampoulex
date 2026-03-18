@@ -466,7 +466,7 @@ def check_and_create_stock_alerts():
 def test_debug():
     return "SUCCESS! The Blueprint is working. The route / is just missing or blocked."
 
-@main_bp.route('/', methods=['GET', 'POST'])
+@main_bp.route('/', methods=['POST'])
 def index():
     # 1. Get the data using your existing helper function (defined at line ~135)
     grouped_products = group_products_by_base()
