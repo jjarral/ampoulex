@@ -38,23 +38,7 @@ from app.models import (
     AuditLog
 )
 from app.utils.tax_calculator import calculate_monthly_tax_deduction
-# ============================================================================
-# SOCKET.IO EVENT HANDLERS
-# ============================================================================
 
-@socketio.on('connect', namespace='/admin')
-def admin_connect():
-    if not current_user.is_authenticated:
-        from flask_socketio import disconnect
-        disconnect()
-        return False
-    emit('connected', {'message': 'Connected to AmpouleX real-time updates'})
-
-
-@socketio.on('disconnect', namespace='/admin')
-def admin_disconnect():
-    username = current_user.username if current_user.is_authenticated else 'Anonymous'
-    print(f'Admin client disconnected: {username}')
 
 main_bp = Blueprint('main', __name__) 
 # ============================================================================
@@ -5037,3 +5021,20 @@ def reopen_accounting_period(id):
     return redirect(url_for('main.accounting_periods'))
 
 
+# ============================================================================
+# SOCKET.IO EVENT HANDLERS
+# ============================================================================
+
+@socketio.on('connect', namespace='/admin')
+def admin_connect():
+    if not current_user.is_authenticated:
+        from flask_socketio import disconnect
+        disconnect()
+        return False
+    emit('connected', {'message': 'Connected to AmpouleX real-time updates'})
+
+
+@socketio.on('disconnect', namespace='/admin')
+def admin_disconnect():
+    username = current_user.username if current_user.is_authenticated else 'Anonymous'
+    print(f'Admin client disconnected: {username}')
