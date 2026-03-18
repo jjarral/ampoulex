@@ -1,10 +1,4 @@
 -- ============================================================================
--- AMPOULEX ERP - COMPLETE DATABASE CREATION SCRIPT
--- Database: SQLite
--- Run: sqlite3 ampoulex.db < create_database.sql
--- ============================================================================
-
--- Enable foreign keys
 PRAGMA foreign_keys = ON;
 
 -- ============================================================================
@@ -899,7 +893,3 @@ INSERT OR IGNORE INTO company_setting (key, value) VALUES ('company_name', 'Ampo
 INSERT OR IGNORE INTO company_setting (key, value) VALUES ('company_address', 'Malik Arshad Farmhouse, Malik Akram Street, Darbar-e-Kareemi Stop, G.T. Road, Wah Cantt');
 INSERT OR IGNORE INTO company_setting (key, value) VALUES ('company_phone', '0340-5336238');
 INSERT OR IGNORE INTO company_setting (key, value) VALUES ('company_email', 'ampoulex.hr@gmail.com');
-
--- ============================================================================
--- DONE
--- ============================================================================
