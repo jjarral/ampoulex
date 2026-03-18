@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS product (
     stem_diameter REAL,
     wall_thickness REAL,
     
-    -- Pricing (PKR per 1000 ampoules)
+     --ricing (PKR per 1000 ampoules)
     base_price REAL NOT NULL,
     price_per_unit REAL,
     
