@@ -468,11 +468,17 @@ def test_debug():
 
 @main_bp.route('/', methods=['GET', 'POST'])
 def index():
-    # 1. Get the data using your existing helper function (defined at line ~135)
-    grouped_products = group_products_by_base()
-    
-    # 2. Render the EXISTING template 'customer-site.html'
-    return render_template('customer-site.html', products=grouped_products)
+    if request.method == 'POST':
+        # This is where you would handle data submitted via a POST request
+        # For example, process a form:
+        # form_data = request.form
+        # current_app.logger.info(f"Received POST data: {form_data}")
+        # Perform some action based on the POST data
+        # Then, you might redirect or render a new template
+        return "POST request received and handled!", 200 # Or redirect('/success')
+    else: # This handles GET requests
+        grouped_products = group_products_by_base()
+        return render_template('customer-site.html', products=grouped_products)
 
 @main_bp.route('/login', methods=['GET', 'POST'])
 def login():
