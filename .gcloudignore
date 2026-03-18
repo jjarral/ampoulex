@@ -1,0 +1,25 @@
+.git
+.gitignore
+.gcloudignore
+node_modules/
+.env
+*.db
+*.sqlite
+__pycache__/
+static/reports/*
+static/barcodes/*
+static/qrcodes/*
+instance/
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.log
+logs/
+.pytest_cache/
+.coverage
+htmlcov/
+# Ensure Dockerfile is not ignored by preceding ignore rules
+!Dockerfile
