@@ -473,7 +473,6 @@ def index():
         # For example, process a form:
         # form_data = request.form
         # current_app.logger.info(f"Received POST data: {form_data}")
-        # Perform some action based on the POST data
         # Then, you might redirect or render a new template
         return "POST request received and handled!", 200 # Or redirect('/success')
     else: # This handles GET requests
