@@ -1,7 +1,8 @@
 # ============================================================================
 # Email Notifications Removed (Postponed)
 # ============================================================================
-
+# Ensure this matches exactly what __init__.py imports
+main_bp = Blueprint('main', __name__) 
 from datetime import datetime, timedelta
 import os
 import json
@@ -37,8 +38,6 @@ from app.models import (
     AuditLog
 )
 from app.utils.tax_calculator import calculate_monthly_tax_deduction
-
-main_bp = Blueprint('main', __name__)
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -460,6 +459,19 @@ def check_and_create_stock_alerts():
 # ============================================================================
 # AUTHENTICATION
 # ============================================================================
+# REPLACE YOUR CURRENT index() FUNCTION WITH THIS:
+@main_bp.route('/test-debug')
+def test_debug():
+    return "SUCCESS! The Blueprint is working. The route / is just missing or blocked."
+
+@main_bp.route('/')
+def index():
+    # 1. Get the data using your existing helper function (defined at line ~135)
+    grouped_products = group_products_by_base()
+    
+    # 2. Render the EXISTING template 'customer-site.html'
+    # Do NOT use 'index.html' because that file does not exist.
+    return render_template('customer-site.html', products=grouped_products)
 
 @main_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -491,7 +503,6 @@ def logout():
 # DASHBOARD
 # ============================================================================
 
-@main_bp.route('/')
 @main_bp.route('/dashboard')
 @login_required
 def dashboard():

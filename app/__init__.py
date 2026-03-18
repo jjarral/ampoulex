@@ -1,106 +1,126 @@
-# app/__init__.py
-
 import os
-from flask import Flask
+import logging
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_socketio import SocketIO
-from flask_mail import Mail
-from config import Config
-from datetime import datetime, timedelta
-import warnings
-from sqlalchemy.exc import SAWarning
-warnings.filterwarnings('ignore', category=SAWarning)
+from dotenv import load_dotenv
+import time
+import sys
 
-# Initialize extensions (WITHOUT app - this is critical!)
+# Configure Logging to see EVERYTHING in Cloud Run logs
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+logger = logging.getLogger(__name__)
+
+load_dotenv()
+
 db = SQLAlchemy()
 login_manager = LoginManager()
 socketio = SocketIO()
-mail = Mail()  # ✅ Initialize WITHOUT app at module level
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
     
-    # ✅ Production-safe configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-        'DATABASE_URL', 
-        'sqlite:///ampoulex.db'
-    )
+    # --- CRITICAL: Force Neon Database Only ---
+    db_url = os.environ.get('DATABASE_URL')
+    
+    if not db_url:
+        # ❌ NO FALLBACK TO SQLITE. Crash immediately if DB URL is missing.
+        logger.error("💥💥💥 FATAL ERROR: DATABASE_URL environment variable is NOT set! 💥💥💥")
+        logger.error("The app cannot run without a database. Check Bitbucket/Cloud Run variables.")
+        raise ValueError("DATABASE_URL is required. Cannot fallback to SQLite.")
+    
+    logger.info(f"📡 Connecting to Neon Database: {db_url[:30]}...")
+    
+    # Force SSL for Neon (Required)
+    if 'postgres' in db_url:
+        if 'sslmode' not in db_url:
+            sep = '&' if '?' in db_url else '?'
+            db_url += f"{sep}sslmode=require"
+            logger.info("✅ Added sslmode=require to URL")
+        
+        # Fix protocol prefix if needed
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+            logger.info("✅ Fixed protocol to postgresql://")
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', app.config['SECRET_KEY'])
     
-    db.init_app(app)
-    login_manager.init_app(app)
-    socketio.init_app(app, cors_allowed_origins="*", async_mode='threading')
-    
+    # Engine Options for Stability
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_recycle': 300,
+        'pool_pre_ping': True,
+        'connect_args': {'connect_timeout': 10} # Fail fast (10s) instead of hanging forever
+    }
+
+    # --- Initialize Extensions ---
+    try:
+        db.init_app(app)
+        login_manager.init_app(app)
+        login_manager.login_view = 'main.login'
+        socketio.init_app(app, cors_allowed_origins="*", async_mode='threading')
+        logger.info("✅ Extensions initialized.")
+    except Exception as e:
+        logger.error(f"💥 Failed to initialize extensions: {e}")
+        raise e
+
+    # --- Database Initialization & Migration ---
     with app.app_context():
-        db.create_all()
-        # Don't create default accounts in production
-        if os.environ.get('FLASK_ENV') != 'production':
-            create_default_accounts()
-    
-    from app.routes import main_bp
-    app.register_blueprint(main_bp)
-    
+        try:
+            logger.info("🔍 Attempting database connection...")
+            start_time = time.time()
+            
+            # Test connection explicitly
+            with db.engine.connect() as conn:
+                conn.execute(db.text("SELECT 1"))
+            
+            elapsed = time.time() - start_time
+            logger.info(f"✅ Database connected successfully in {elapsed:.2f}s")
+
+            # Create tables if they don't exist
+            logger.info("🏗️ Creating/Verifying tables...")
+            db.create_all()
+            logger.info("✅ Tables verified/created.")
+
+            # Create Admin User if missing
+            from app.models import User
+            if not User.query.filter_by(username='admin').first():
+                logger.info("👤 Creating default admin user...")
+                admin = User(username='admin', email='admin@ampoulex.com', role='admin', is_active=True)
+                admin.set_password('admin123')
+                db.session.add(admin)
+                db.session.commit()
+                logger.info("✅ Admin user created (admin/admin123).")
+            else:
+                logger.info("✅ Admin user already exists.")
+                
+        except Exception as e:
+            logger.error(f"💥💥💥 DATABASE CONNECTION FAILED 💥💥💥")
+            logger.error(f"Error Type: {type(e).__name__}")
+            logger.error(f"Error Message: {str(e)}")
+            logger.error("Check your DATABASE_URL variable in Bitbucket/Cloud Run.")
+            logger.error("Ensure it ends with ?sslmode=require and has no channel_binding.")
+            # Re-raise to stop the container from starting in a broken state
+            raise e
+
+    # --- Register Routes ---
+    try:
+        logger.info("🗺️ Registering routes...")
+        from app.routes import main_bp
+        app.register_blueprint(main_bp)
+        logger.info("✅ Routes registered successfully.")
+    except Exception as e:
+        logger.error(f"💥💥💥 FAILED TO REGISTER ROUTES 💥💥💥")
+        logger.error(f"Error Type: {type(e).__name__}")
+        logger.error(f"Error Message: {str(e)}")
+        logger.error("Likely cause: Missing file (e.g., app/utils/tax_calculator.py) or Syntax Error in routes.py")
+        raise e
+
+    # Health Check Endpoint
+    @app.route('/health')
+    def health():
+        return jsonify({"status": "healthy", "message": "App is running on Neon DB"}), 200
+
     return app
-def create_default_accounts():
-    """Create default chart of accounts on first run"""
-    from app.models import Account
-    
-    default_accounts = [
-        # Assets
-        ('1000', 'Cash', 'Asset', None),
-        ('1010', 'Cash in Hand', 'Asset', '1000'),
-        ('1020', 'Petty Cash', 'Asset', '1000'),
-        ('1100', 'Bank', 'Asset', None),
-        ('1110', 'Bank - MCB', 'Asset', '1100'),
-        ('1120', 'Bank - HBL', 'Asset', '1100'),
-        ('1200', 'Accounts Receivable', 'Asset', None),
-        ('1300', 'Inventory', 'Asset', None),
-        ('1400', 'Fixed Assets', 'Asset', None),
-        
-        # Liabilities
-        ('2000', 'Liabilities', 'Liability', None),
-        ('2100', 'Accounts Payable', 'Liability', '2000'),
-        ('2200', 'Tax Payable', 'Liability', '2000'),
-        
-        # Equity
-        ('3000', 'Equity', 'Equity', None),
-        ('3100', 'Share Capital', 'Equity', '3000'),
-        ('3200', 'Retained Earnings', 'Equity', '3000'),
-        
-        # Income
-        ('4000', 'Income', 'Income', None),
-        ('4100', 'Sales Revenue', 'Income', '4000'),
-        ('4200', 'Service Revenue', 'Income', '4000'),
-        
-        # Expenses
-        ('5000', 'Expenses', 'Expense', None),
-        ('5100', 'Cost of Goods Sold', 'Expense', '5000'),
-        ('5200', 'Salaries', 'Expense', '5000'),
-        ('5300', 'Rent', 'Expense', '5000'),
-        ('5400', 'Utilities', 'Expense', '5000'),
-        ('5500', 'Office Expenses', 'Expense', '5000'),
-    ]
-    
-    for code, name, acc_type, parent_code in default_accounts:
-        parent_id = None
-        if parent_code:
-            parent = Account.query.filter_by(account_code=parent_code).first()
-            if parent:
-                parent_id = parent.id
-        
-        existing = Account.query.filter_by(account_code=code).first()
-        if not existing:
-            account = Account(
-                account_code=code,
-                account_name=name,
-                account_type=acc_type,
-                parent_account_id=parent_id,
-                is_active=True
-            )
-            db.session.add(account)
-    
-    db.session.commit()
-    print("✅ Default chart of accounts created!")    

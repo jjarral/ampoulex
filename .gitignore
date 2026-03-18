@@ -51,6 +51,3 @@ static/logos/*
 .coverage
 htmlcov/
 
-# Docker
-.dockerignore
-Dockerfile
