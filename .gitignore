@@ -1,4 +1,4 @@
-# Python
+.env
 __pycache__/
 *.py[cod]
 *$py.class
@@ -7,7 +7,6 @@ __pycache__/
 venv/
 .venv/
 env/
-.env
 .env.production
 *.egg-info/
 dist/
@@ -41,11 +40,24 @@ Thumbs.db
 logs/
 
 # Static files (generated)
-static/reports/*
-static/barcodes/*
-static/qrcodes/*
-static/logos/*
+# ... (keep your existing Python, DB, IDE, OS rules) ...
 
+# Static files (Generated)
+# Keep the folders, but ignore the files inside them
+static/reports/.gitkeep
+static/barcodes/.gitkeep
+static/qrcodes/.gitkeep
+static/logos/.gitkeep
+
+# Ignore all files inside these folders except .gitkeep
+static/reports/*
+!static/reports/.gitkeep
+static/barcodes/*
+!static/barcodes/.gitkeep
+static/qrcodes/*
+!static/qrcodes/.gitkeep
+static/logos/*
+!static/logos/.gitkeep
 # Test
 .pytest_cache/
 .coverage

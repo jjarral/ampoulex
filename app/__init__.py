@@ -29,6 +29,8 @@ def create_app():
         logger.error("The app cannot run without a database. Check Bitbucket/Cloud Run variables.")
         raise ValueError("DATABASE_URL is required. Cannot fallback to SQLite.")
 
+        # ... previous code ...
+    
     logger.info(f"📡 Connecting to Neon Database: {db_url[:30]}...")
     if 'postgres' in db_url:
         if 'sslmode' not in db_url:
@@ -39,12 +41,14 @@ def create_app():
             db_url = db_url.replace('postgres://', 'postgresql://', 1)
             logger.info("✅ Fixed protocol to postgresql://")
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+    # ✅ FIX THIS LINE BELOW:
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url  # Changed from 'DATABASE_URI'
+    
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         'pool_recycle': 300,
         'pool_pre_ping': True,
-        'connect_args': {'connect_timeout': 10} # Fail fast (10s) instead of hanging forever
+        'connect_args': {'connect_timeout': 10}
     }
 
     try:
