@@ -469,11 +469,6 @@ def test_debug():
 @main_bp.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        # This is where you would handle data submitted via a POST request
-        # For example, process a form:
-        # form_data = request.form
-        # current_app.logger.info(f"Received POST data: {form_data}")
-        # Then, you might redirect or render a new template
         return "POST request received and handled!", 200 # Or redirect('/success')
     else: # This handles GET requests
         grouped_products = group_products_by_base()
@@ -509,6 +504,7 @@ def logout():
 # DASHBOARD
 # ============================================================================
 
+# ✅ CORRECT: Only listens to /dashboard
 @main_bp.route('/dashboard')
 @login_required
 def dashboard():
@@ -523,19 +519,19 @@ def dashboard():
         Inquiry.status.in_(['new', 'followup']),
         Inquiry.is_deleted == False
     ).count()
+    
     total_customers = Customer.query.filter_by(is_active=True, is_deleted=False).count()
     
     recent_orders = Order.query.order_by(Order.created_at.desc()).limit(5).all()
     recent_inquiries = Inquiry.query.filter_by(is_deleted=False).order_by(Inquiry.created_at.desc()).limit(5).all()
     
     return render_template('dashboard.html',
-                         total_revenue=total_revenue,
-                         total_orders=total_orders,
-                         active_inquiries=active_inquiries,
-                         total_customers=total_customers,
-                         recent_orders=recent_orders,
-                         recent_inquiries=recent_inquiries)
-
+        total_revenue=total_revenue,
+        total_orders=total_orders,
+        active_inquiries=active_inquiries,
+        total_customers=total_customers,
+        recent_orders=recent_orders,
+        recent_inquiries=recent_inquiries)
 
 # ============================================================================
 # PRODUCTS
