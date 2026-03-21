@@ -543,7 +543,7 @@ def products():
 def add_product():
     if request.method == 'POST':
         try:
-            base_price = float(request.form.get('base_price', 0))
+            base_price = integer(request.form.get('base_price', 0))
             
             product = Product(
                 name=request.form.get('name', ''),
@@ -621,7 +621,7 @@ def edit_product(id):
     
     if request.method == 'POST':
         try:
-            base_price = float(request.form.get('base_price', 0))
+            base_price = integer(request.form.get('base_price', 0))
             
             product.name = request.form.get('name', '')
             product.specification = request.form.get('specification', '')

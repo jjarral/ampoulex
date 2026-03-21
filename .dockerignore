@@ -1,16 +1,16 @@
+# .dockerignore
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
-*.so
 
-# Virtual environment
+# Virtual environments
 venv/
 .venv/
 env/
-.env
+ENV/
 
 # IDE
 .vscode/
@@ -18,19 +18,13 @@ env/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
-
 # Git
 .git/
 .gitignore
 
-# Database (SQLite - not used)
-instance/
-*.db
-*.sqlite
-*.sqlite3
+# OS files
+.DS_Store
+Thumbs.db
 
 # Logs
 *.log
@@ -41,6 +35,6 @@ logs/
 .coverage
 htmlcov/
 
-# Local environment
+# Local environment (keep .env.example for reference)
 .env.local
 .env.development

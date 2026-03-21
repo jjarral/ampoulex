@@ -27,7 +27,7 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     specification = db.Column(db.String(200))
-    base_price = db.Column(db.Float, nullable=False)
+    base_price = db.Column(db.Integer, nullable=False)
     stock = db.Column(db.Integer, default=0)
     color = db.Column(db.String(20))
     product_type = db.Column(db.String(20), default='product')
