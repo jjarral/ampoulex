@@ -38,7 +38,7 @@ class Product(db.Model):
     
     # ✅ ADD ALL THESE MISSING COLUMNS:
     stock = db.Column(db.Integer, default=0)
-    base_price = db.Column(db.Numeric(10, 4))
+    base_price = db.Column(db.Integer, default=0)
     price_per_unit = db.Column(db.Numeric(10, 4))
     unit_price = db.Column(db.Numeric(10, 4))
     
