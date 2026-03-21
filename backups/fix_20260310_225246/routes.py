@@ -273,7 +273,7 @@ def group_products_by_base():
         grouped[base_name]['variants'].append({
             'id': product.id,
             'color': product.color,
-            'price': float(product.base_price),
+            'price': integer(product.base_price),
             'stock': product.stock,
             'product_type': product.product_type
         })
@@ -426,7 +426,7 @@ def add_product():
             product = Product(
                 name=request.form.get('name', ''),
                 specification=request.form.get('specification', ''),
-                base_price=float(request.form.get('base_price', 0)),
+                base_price=integer(request.form.get('base_price', 0)),
                 stock=int(request.form.get('stock', 0)),
                 color=request.form.get('color', ''),
                 product_type=request.form.get('product_type', 'product'),
@@ -481,7 +481,7 @@ def edit_product(id):
         try:
             product.name = request.form.get('name', '')
             product.specification = request.form.get('specification', '')
-            product.base_price = float(request.form.get('base_price', 0))
+            product.base_price = Integer(request.form.get('base_price', 0))
             product.stock = int(request.form.get('stock', 0))
             product.color = request.form.get('color', '')
             product.product_type = request.form.get('product_type', 'product')
@@ -702,7 +702,7 @@ def process_invoice(id):
                         stock_warnings.append(f"{item.product.name}: Requested {adjusted_qty}, Available {item.product.stock}. Adjusted to {item.product.stock}.")
                         adjusted_qty = item.product.stock  # Auto-adjust to available stock
                 
-                unit_price = float(request.form.get(f'price_{item.id}', item.product.base_price if item.product else 0))
+                unit_price = Integer(request.form.get(f'price_{item.id}', item.product.base_price if item.product else 0))
                 tax_rate = float(request.form.get(f'tax_{item.id}', 17))
                 
                 item_subtotal = adjusted_qty * unit_price
@@ -3323,7 +3323,7 @@ def import_data(module):
                     product = Product(
                         name=row['name'],
                         specification=row.get('specification', ''),
-                        base_price=float(row['base_price']),
+                        base_price=integer(row['base_price']),
                         stock=int(row['stock']),
                         color=row['color'],
                         product_type=row.get('product_type', 'product'),
