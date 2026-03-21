@@ -235,12 +235,10 @@ TEMPLATES = {
 TOTAL_TEMPLATES = sum(len(templates) for templates in TEMPLATES.values())
 
 def create_app():
-    # ✅ Get project root (works in container too)
     PROJECT_ROOT = Path(__file__).parent.parent
     TEMPLATES_FOLDER = PROJECT_ROOT / 'templates'
     STATIC_DIR = PROJECT_ROOT / 'static'
     
-    # ✅ Create Flask app with explicit paths
     app = Flask(__name__, 
                 template_folder=str(TEMPLATES_FOLDER),
                 static_folder=str(STATIC_DIR))
