@@ -14,6 +14,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256))
     role = db.Column(db.String(20), default='user')
+    is_active = db.Column(db.Boolean, default=True, nullable=False)  # ✅ ADD THIS LINE
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     pass
     def set_password(self, password):
@@ -23,61 +24,50 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 class Product(db.Model):
-    """Product/Ampoule database"""
     __tablename__ = 'product'
-    
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)  # e.g., "Glass Ampoule 1cc"
-    specification = db.Column(db.String(200), nullable=True)  # e.g., "1cc capacity, sterile"
+    name = db.Column(db.String(120), nullable=False)
+    product_type = db.Column(db.String(50), nullable=True)
+    specification = db.Column(db.String(255), nullable=True)
+    base_name = db.Column(db.String(120), nullable=True)
+    volume_cc = db.Column(db.Float)
+    glass_type = db.Column(db.String(20))
+    neck_finish = db.Column(db.String(20))
+    sku = db.Column(db.String(50))
+    color = db.Column(db.String(50), nullable=True)
     
-    # ✅ NEW DIMENSION FIELDS FOR AMPOULES:
-    body_diameter = db.Column(db.Float, nullable=True)  # in mm
-    overall_length = db.Column(db.Float, nullable=True)  # in mm
-    sealing_point = db.Column(db.Float, nullable=True)  # in mm from base
-    body_length = db.Column(db.Float, nullable=True)  # in mm
-    stem_diameter = db.Column(db.Float, nullable=True)  # in mm
-    wall_thickness = db.Column(db.Float, nullable=True)  # in mm
+    # ✅ ADD ALL THESE MISSING COLUMNS:
+    stock = db.Column(db.Integer, default=0)
+    base_price = db.Column(db.Numeric(10, 4))
+    price_per_unit = db.Column(db.Numeric(10, 4))
+    unit_price = db.Column(db.Numeric(10, 4))
     
-    # ✅ PRICING: Rate per 1000 ampoules (instead of per unit)
-    base_price = db.Column(db.Float, nullable=False)  # Price per 1000 units in PKR
-    price_per_unit = db.Column(db.Float, nullable=True)  # Calculated: base_price / 1000
+    # ✅ DIMENSION FIELDS:
+    body_diameter = db.Column(db.Float, default=0)
+    overall_length = db.Column(db.Float, default=0)
+    sealing_point = db.Column(db.Float, default=0)
+    body_length = db.Column(db.Float, default=0)
+    stem_diameter = db.Column(db.Float, default=0)
+    wall_thickness = db.Column(db.Float, default=0)
     
-    stock = db.Column(db.Integer, default=0)  # Stock in units
-    color = db.Column(db.String(50), nullable=True)  # Transparent, Amber, etc.
-    product_type = db.Column(db.String(50), default='product')  # product, service, raw_material
-    
-    # White label / Painting service fields
-    material_type = db.Column(db.String(50), nullable=True)  # Glass, Plastic, etc.
-    usp_type = db.Column(db.String(50), nullable=True)  # USP Type I, II, III
-    shape_type = db.Column(db.String(50), nullable=True)  # Round, Flat, etc.
-    dimensions = db.Column(db.String(100), nullable=True)  # Legacy field
+    # ✅ ADDITIONAL FIELDS:
+    material_type = db.Column(db.String(50), nullable=True)
+    usp_type = db.Column(db.String(50), nullable=True)
+    shape_type = db.Column(db.String(50), nullable=True)
+    dimensions = db.Column(db.String(200), nullable=True)
     use_case = db.Column(db.Text, nullable=True)
     
-    # Painting service specific
-    paint_color = db.Column(db.String(50), nullable=True)  # For white label/painted products
-    paint_type = db.Column(db.String(50), nullable=True)  # e.g., "Epoxy", "Acrylic", "UV-cured"
-    printing_method = db.Column(db.String(50), nullable=True)  # Screen print, Pad print, etc.
+    # ✅ PAINTING FIELDS:
+    paint_color = db.Column(db.String(50), nullable=True)
+    paint_type = db.Column(db.String(50), nullable=True)
+    printing_method = db.Column(db.String(50), nullable=True)
     
-    is_deleted = db.Column(db.Boolean, default=False)
+    # ✅ STATUS:
     is_active = db.Column(db.Boolean, default=True)
+    is_deleted = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    order_items = db.relationship('OrderItem', lazy=True)
-    inquiry_items = db.relationship('InquiryItem', lazy=True)
-    bom_items = db.relationship('BOMItem', lazy=True)
-    customer_prices = db.relationship('CustomerProductPrice', lazy=True)  # backref removed
-    
-    @property
-    def unit_price(self):
-        """Calculate price per single unit from base_price (per 1000)"""
-        return self.base_price / 1000 if self.base_price else 0
-    
-    @property
-    def stock_value(self):
-        """Calculate total stock value"""
-        return self.stock * self.unit_price
-    
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+
 class Customer(db.Model):
     __tablename__ = 'customer'
     id = db.Column(db.Integer, primary_key=True)

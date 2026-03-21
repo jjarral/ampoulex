@@ -420,8 +420,8 @@ def group_products_by_base():
         grouped[base_name]['variants'].append({
             'id': product.id,
             'color': product.color,
-            'price': float(product.base_price),
-            'stock': product.stock
+            'price': float(product.base_price or 0),
+            'stock': product.stock or 0
         })
     
     return list(grouped.values())
@@ -461,18 +461,11 @@ def check_and_create_stock_alerts():
 # ============================================================================
 # AUTHENTICATION
 # ============================================================================
-# REPLACE YOUR CURRENT index() FUNCTION WITH THIS:
-@main_bp.route('/test-debug')
-def test_debug():
-    return "SUCCESS! The Blueprint is working. The route / is just missing or blocked."
 
 @main_bp.route('/', methods=['GET', 'POST'])
 def index():
-    if request.method == 'POST':
-        return "POST request received and handled!", 200 # Or redirect('/success')
-    else: # This handles GET requests
-        grouped_products = group_products_by_base()
-        return render_template('customer-site.html', products=grouped_products)
+    grouped_products = group_products_by_base()
+    return render_template('customer-site.html', products=grouped_products)
 
 @main_bp.route('/login', methods=['GET', 'POST'])
 def login():

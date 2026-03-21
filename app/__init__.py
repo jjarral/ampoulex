@@ -2,6 +2,7 @@
 
 import os
 import logging
+from pathlib import Path
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -19,17 +20,17 @@ login_manager = LoginManager()
 socketio = SocketIO()
 
 def create_app():
-    app = Flask(__name__)
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
+    PROJECT_ROOT = Path(__file__).parent.parent
+    TEMPLATES_DIR = PROJECT_ROOT / 'templates'
 
+    app = Flask(__name__, template_folder=str(TEMPLATES_DIR))
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
     db_url = os.environ.get('DATABASE_URL')
 
     if not db_url:
         logger.error("💥💥💥 FATAL ERROR: DATABASE_URL environment variable is NOT set! 💥💥💥")
         logger.error("The app cannot run without a database. Check Bitbucket/Cloud Run variables.")
         raise ValueError("DATABASE_URL is required. Cannot fallback to SQLite.")
-
-        # ... previous code ...
     
     logger.info(f"📡 Connecting to Neon Database: {db_url[:30]}...")
     if 'postgres' in db_url:
