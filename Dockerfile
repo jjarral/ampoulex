@@ -24,7 +24,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # ✅ Copy ALL application code (including templates/ and static/)
 COPY . .
 
-# Create necessary directories for static files
 RUN mkdir -p static/reports static/barcodes static/qrcodes static/logos
 
 # Expose port (Cloud Run expects 8080)
