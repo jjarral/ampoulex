@@ -420,7 +420,7 @@ def group_products_by_base():
         grouped[base_name]['variants'].append({
             'id': product.id,
             'color': product.color,
-            'price': float(product.base_price or 0),
+            'price': float(product.base_price) or 0,
             'stock': product.stock or 0
         })
     
