@@ -1,27 +1,34 @@
-FROM python:3.9-slim
+# Use Python 3.11 slim image
+FROM python:3.11-slim
 
+# Set working directory
 WORKDIR /app
 
-# Install system dependencies for PDF/Excel generation
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV FLASK_ENV=production
+ENV FLASK_DEBUG=0
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
-    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for caching
+# Copy requirements first (for better caching)
 COPY requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire project (includes app/, templates/, static/)
+# Copy application code
 COPY . .
 
-# Set environment variables
-ENV FLASK_APP=app
-ENV FLASK_ENV=production
-ENV PYTHONUNBUFFERED=1
+# Create necessary directories
+RUN mkdir -p static/reports static/barcodes static/qrcodes static/logos
 
-# Expose port 8080 (Required by Cloud Run)
+# Expose port
 EXPOSE 8080
 
-# Run with Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "wsgi:app"]
+# Run with gunicorn (production WSGI server)
+CMD exec gunicorn --bind :8080 --workers 4 --threads 8 --timeout 0 app:create_app()

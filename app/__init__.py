@@ -22,8 +22,8 @@ socketio = SocketIO()
 def create_app():
     PROJECT_ROOT = Path(__file__).parent.parent
     TEMPLATES_DIR = PROJECT_ROOT / 'templates'
-
-    app = Flask(__name__, template_folder=str(TEMPLATES_DIR))
+    STATIC_DIR = PROJECT_ROOT / 'static'
+    app = Flask(__name__, template_folder=str(TEMPLATES_DIR), static_folder=str(STATIC_DIR))
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
     db_url = os.environ.get('DATABASE_URL')
 
