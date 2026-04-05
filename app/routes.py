@@ -5015,6 +5015,326 @@ def reopen_accounting_period(id):
 
 
 # ============================================================================
+# EXPENSES - BULK UPLOAD
+# ============================================================================
+@main_bp.route('/expenses/bulk-upload', methods=['GET', 'POST'])
+@login_required
+def expenses_bulk_upload():
+    """Bulk upload expenses from Excel file"""
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file selected', 'error')
+            return redirect(request.url)
+        
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected', 'error')
+            return redirect(request.url)
+        
+        if file and file.filename.endswith(('.xlsx', '.xls')):
+            try:
+                import pandas as pd
+                import io
+                
+                # Read Excel file
+                df = pd.read_excel(io.BytesIO(file.read()))
+                
+                # Validate required columns
+                required_cols = ['category', 'amount', 'date']
+                if not all(col in df.columns for col in required_cols):
+                    flash(f'Excel must have columns: {", ".join(required_cols)}', 'error')
+                    return redirect(request.url)
+                
+                # Process each row
+                uploaded_count = 0
+                errors = []
+                
+                for idx, row in df.iterrows():
+                    try:
+                        # Parse date
+                        if isinstance(row['date'], str):
+                            expense_date = datetime.strptime(row['date'], '%Y-%m-%d').date()
+                        else:
+                            expense_date = row['date'].date() if hasattr(row['date'], 'date') else datetime.utcnow().date()
+                        
+                        expense = Expense(
+                            category=str(row['category']).strip(),
+                            description=str(row.get('description', '')).strip(),
+                            amount=float(row['amount']),
+                            date=expense_date,
+                            status=str(row.get('status', 'pending')).strip(),
+                            paid_by=str(row.get('paid_by', current_user.username)).strip(),
+                            payment_method=str(row.get('payment_method', 'cash')).strip(),
+                            reference_number=str(row.get('reference_number', '')).strip(),
+                            approved_by=str(row.get('approved_by', '')).strip()
+                        )
+                        db.session.add(expense)
+                        uploaded_count += 1
+                    except Exception as e:
+                        errors.append(f'Row {idx + 2}: {str(e)}')
+                
+                db.session.commit()
+                
+                if errors:
+                    flash(f'Uploaded {uploaded_count} expenses. {len(errors)} errors: {" | ".join(errors[:3])}', 'warning')
+                else:
+                    flash(f'Successfully uploaded {uploaded_count} expenses!', 'success')
+                
+                return redirect(url_for('main.expenses'))
+                
+            except ImportError:
+                flash('pandas library not installed. Run: pip install pandas openpyxl', 'error')
+                return redirect(url_for('main.expenses'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error processing file: {str(e)}', 'error')
+                return redirect(request.url)
+        else:
+            flash('Please upload a valid Excel file (.xlsx or .xls)', 'error')
+            return redirect(request.url)
+    
+    return render_template('expenses/bulk_upload.html')
+
+# ============================================================================
+# PRODUCTS - BULK UPLOAD
+# ============================================================================
+@main_bp.route('/products/bulk-upload', methods=['GET', 'POST'])
+@login_required
+def products_bulk_upload():
+    """Bulk upload products from Excel file"""
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file selected', 'error')
+            return redirect(request.url)
+        
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected', 'error')
+            return redirect(request.url)
+        
+        if file and file.filename.endswith(('.xlsx', '.xls')):
+            try:
+                import pandas as pd
+                import io
+                
+                df = pd.read_excel(io.BytesIO(file.read()))
+                
+                # Validate required columns
+                required_cols = ['name', 'base_price']
+                if not all(col in df.columns for col in required_cols):
+                    flash(f'Excel must have columns: {", ".join(required_cols)}', 'error')
+                    return redirect(request.url)
+                
+                uploaded_count = 0
+                errors = []
+                
+                for idx, row in df.iterrows():
+                    try:
+                        base_price = float(row.get('base_price', 0))
+                        product = Product(
+                            name=str(row['name']).strip(),
+                            specification=str(row.get('specification', '')).strip(),
+                            base_name=str(row.get('base_name', '')).strip(),
+                            volume_cc=float(row.get('volume_cc', 0)) if row.get('volume_cc') else None,
+                            glass_type=str(row.get('glass_type', '')).strip(),
+                            neck_finish=str(row.get('neck_finish', '')).strip(),
+                            sku=str(row.get('sku', '')).strip(),
+                            color=str(row.get('color', '')).strip(),
+                            product_type=str(row.get('product_type', 'product')).strip(),
+                            base_price=base_price,
+                            price_per_unit=base_price / 1000 if base_price > 0 else 0,
+                            stock=int(row.get('stock', 0)),
+                            is_active=row.get('is_active', 'true').lower() == 'true'
+                        )
+                        db.session.add(product)
+                        uploaded_count += 1
+                    except Exception as e:
+                        errors.append(f'Row {idx + 2}: {str(e)}')
+                
+                db.session.commit()
+                
+                if errors:
+                    flash(f'Uploaded {uploaded_count} products. {len(errors)} errors: {" | ".join(errors[:3])}', 'warning')
+                else:
+                    flash(f'Successfully uploaded {uploaded_count} products!', 'success')
+                
+                return redirect(url_for('main.products'))
+                
+            except ImportError:
+                flash('pandas library not installed. Run: pip install pandas openpyxl', 'error')
+                return redirect(url_for('main.products'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error processing file: {str(e)}', 'error')
+                return redirect(request.url)
+        else:
+            flash('Please upload a valid Excel file (.xlsx or .xls)', 'error')
+            return redirect(request.url)
+    
+    return render_template('products/bulk_upload.html')
+
+# ============================================================================
+# CUSTOMERS - BULK UPLOAD
+# ============================================================================
+@main_bp.route('/customers/bulk-upload', methods=['GET', 'POST'])
+@login_required
+def customers_bulk_upload():
+    """Bulk upload customers from Excel file"""
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file selected', 'error')
+            return redirect(request.url)
+        
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected', 'error')
+            return redirect(request.url)
+        
+        if file and file.filename.endswith(('.xlsx', '.xls')):
+            try:
+                import pandas as pd
+                import io
+                
+                df = pd.read_excel(io.BytesIO(file.read()))
+                
+                required_cols = ['name']
+                if not all(col in df.columns for col in required_cols):
+                    flash(f'Excel must have columns: {", ".join(required_cols)}', 'error')
+                    return redirect(request.url)
+                
+                uploaded_count = 0
+                errors = []
+                
+                for idx, row in df.iterrows():
+                    try:
+                        # Check for duplicate email
+                        email = str(row.get('email', '')).strip().lower()
+                        if email:
+                            existing = Customer.query.filter_by(email=email).first()
+                            if existing:
+                                errors.append(f'Row {idx + 2}: Email {email} already exists')
+                                continue
+                        
+                        customer = Customer(
+                            name=str(row['name']).strip(),
+                            business_name=str(row.get('business_name', '')).strip(),
+                            role=str(row.get('role', 'customer')).strip(),
+                            email=email if email else None,
+                            phone=str(row.get('phone', '')).strip(),
+                            address=str(row.get('address', '')).strip(),
+                            payment_terms=str(row.get('payment_terms', 'cash')).strip(),
+                            credit_limit=float(row.get('credit_limit', 0)),
+                            is_active=row.get('is_active', 'true').lower() == 'true'
+                        )
+                        db.session.add(customer)
+                        uploaded_count += 1
+                    except Exception as e:
+                        errors.append(f'Row {idx + 2}: {str(e)}')
+                
+                db.session.commit()
+                
+                if errors:
+                    flash(f'Uploaded {uploaded_count} customers. {len(errors)} errors: {" | ".join(errors[:3])}', 'warning')
+                else:
+                    flash(f'Successfully uploaded {uploaded_count} customers!', 'success')
+                
+                return redirect(url_for('main.customers'))
+                
+            except ImportError:
+                flash('pandas library not installed. Run: pip install pandas openpyxl', 'error')
+                return redirect(url_for('main.customers'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error processing file: {str(e)}', 'error')
+                return redirect(request.url)
+        else:
+            flash('Please upload a valid Excel file (.xlsx or .xls)', 'error')
+            return redirect(request.url)
+    
+    return render_template('customers/bulk_upload.html')
+
+
+# ============================================================================
+# TEMPLATE DOWNLOAD ROUTES
+# ============================================================================
+@main_bp.route('/expenses/download-template')
+@login_required
+def download_expense_template():
+    """Download sample Excel template for expenses"""
+    try:
+        import pandas as pd
+        from io import BytesIO
+        
+        # Create sample dataframe
+        data = {
+            'category': ['Utilities', 'Supplies', 'Maintenance'],
+            'amount': [5000, 2500, 10000],
+            'date': ['2026-03-01', '2026-03-05', '2026-03-10'],
+            'description': ['Electricity bill', 'Office supplies', 'Machine repair'],
+            'status': ['pending', 'pending', 'pending'],
+            'paid_by': ['', '', ''],
+            'payment_method': ['cash', 'bank_transfer', 'cash'],
+            'reference_number': ['', '', ''],
+            'approved_by': ['', '', '']
+        }
+        df = pd.DataFrame(data)
+        
+        # Write to BytesIO
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Expenses')
+        output.seek(0)
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name='expense_upload_template.xlsx'
+        )
+    except ImportError:
+        flash('pandas or openpyxl not installed', 'error')
+        return redirect(url_for('main.expenses'))
+
+@main_bp.route('/products/download-template')
+@login_required
+def download_product_template():
+    """Download sample Excel template for products"""
+    try:
+        import pandas as pd
+        from io import BytesIO
+        
+        data = {
+            'name': ['5cc Amber Ampoule', '10cc Transparent Ampoule'],
+            'base_price': [150, 200],
+            'specification': ['Type I glass', 'Type I glass'],
+            'base_name': ['Ampoule', 'Ampoule'],
+            'volume_cc': [5, 10],
+            'glass_type': ['Amber', 'Transparent'],
+            'neck_finish': ['Crimp', 'Crimp'],
+            'sku': ['AMP-5CC-AMB', 'AMP-10CC-TRN'],
+            'color': ['Amber', 'Clear'],
+            'product_type': ['product', 'product'],
+            'stock': [50000, 30000],
+            'is_active': ['true', 'true']
+        }
+        df = pd.DataFrame(data)
+        
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Products')
+        output.seek(0)
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name='product_upload_template.xlsx'
+        )
+    except ImportError:
+        flash('pandas or openpyxl not installed', 'error')
+        return redirect(url_for('main.products'))            
+
+# ============================================================================
 # SOCKET.IO EVENT HANDLERS
 # ============================================================================
 
