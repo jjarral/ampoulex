@@ -1,19 +1,13 @@
-# ============================================================================
-# Email Notifications Removed (Postponed)
-# ============================================================================
-# Ensure this matches exactly what __init__.py imports
-
 from datetime import datetime, timedelta
 import os
 import json
 import random
 from sqlalchemy import func
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, send_file, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_socketio import emit
-# Comment out email imports (not configured yet)
-# from email.mime.multipart import MIMEMultipart
-# from email.mime.text import MIMEText
+
 from app import db, socketio
 from app.models import (
     User, Product, Customer, Inquiry, Order, OrderItem,
