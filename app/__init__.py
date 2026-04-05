@@ -251,12 +251,13 @@ def create_app():
     
     # Validate DATABASE_URL
     db_url = os.environ.get('DATABASE_URL')
-    if not db_url:
-        app.logger.error("💥💥💥 FATAL ERROR: DATABASE_URL environment variable is NOT set! 💥💥💥")
-        raise ValueError("DATABASE_URL is required. Cannot fallback to SQLite.")
+    if db_url and isinstance(db_url, str) and 'postgres' in db_url and 'connect_timeout' not in db_url:
+        sep = '&' if '?' in db_url else '?'
+        db_url += f"{sep}connect_timeout=10"
+        app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     
     # Ensure sslmode=require for Neon
-    if 'postgres' in db_url and 'sslmode' not in db_url:
+    if db_url and isinstance(db_url, str) and 'postgres' in db_url and 'sslmode' not in db_url:
         sep = '&' if '?' in db_url else '?'
         db_url += f"{sep}sslmode=require"
         app.config['SQLALCHEMY_DATABASE_URI'] = db_url

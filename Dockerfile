@@ -29,5 +29,5 @@ RUN mkdir -p static/reports static/barcodes static/qrcodes static/logos
 # Expose port (Cloud Run expects 8080)
 EXPOSE 8080
 
-# Run with gunicorn (production WSGI server)
-CMD exec gunicorn --bind :8080 --workers 4 --threads 8 --timeout 0 app:create_app()
+# ✅ CORRECT: Use $PORT environment variable from Cloud Run
+CMD exec gunicorn --bind :$PORT --workers 4 --threads 8 --timeout 300 --access-logfile - --error-logfile - app:create_app
