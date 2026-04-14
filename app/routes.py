@@ -36,10 +36,8 @@ from app.utils.tax_calculator import calculate_monthly_tax_deduction
 
 main_bp = Blueprint('main', __name__) 
 
-@app.route('/favicon.ico') # Or @bp.route if using Blueprints
+@main_bp.route('/favicon.ico')
 def favicon():
-    # Use current_app.root_path to ensure the path is correct 
-    # regardless of where routes.py is located.
     return send_from_directory(
         os.path.join(current_app.root_path, 'static'),
         'favicon.ico', 
