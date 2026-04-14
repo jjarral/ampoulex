@@ -7,7 +7,8 @@ Ampoulex is a comprehensive Enterprise Resource Planning (ERP) / Business Manage
 - **Backend:** Python Flask 3.0 with SQLAlchemy ORM
 - **Database:** PostgreSQL (Replit built-in, or Cloud SQL on GCP)
 - **Real-time:** Flask-SocketIO with eventlet worker
-- **Frontend:** AdminLTE 4, Bootstrap 5, jQuery, Chart.js, DataTables, SweetAlert2 (CDN)
+- **Frontend:** AdminLTE 3.2, Bootstrap 4.6, jQuery, Chart.js, DataTables, SweetAlert2 (CDN)
+- **Theme:** Navy (#0c2340) + Gold (#c8a84b) design system — Inter font, applied system-wide via CSS variables in base.html
 - **Reporting:** ReportLab (PDF), Openpyxl (Excel), pandas
 
 ## Project Structure
