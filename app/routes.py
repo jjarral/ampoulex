@@ -29,7 +29,8 @@ from app.models import (
     BankAccount, BankReconciliation,
     PaymentVoucher, PaymentVoucherLine,
     ReceiptVoucher, ReceiptVoucherLine,
-    AuditLog
+    AuditLog,
+    FixedAsset, Shift, ShiftAssignment
 )
 from app.utils.tax_calculator import calculate_monthly_tax_deduction
 
@@ -3769,9 +3770,9 @@ def balance_sheet():
     ).scalar() or 0
 
     total_current_assets = total_cash + accounts_receivable + inventory_value
-    fixed_assets = 0  # Placeholder for fixed assets (machinery, equipment, etc.)
+    fixed_assets = sum(a.book_value for a in FixedAsset.query.filter_by(status='active').all())
     total_current_liabilities = accounts_payable + tax_payable
-    total_assets = total_current_assets
+    total_assets = total_current_assets + fixed_assets
 
     total_liabilities = 0
     for account_id in liability_account_ids:
@@ -5871,6 +5872,203 @@ def download_product_template():
 # ============================================================================
 # SOCKET.IO EVENT HANDLERS
 # ============================================================================
+
+# ============================================================================
+# FIXED ASSETS MODULE
+# ============================================================================
+
+@main_bp.route('/assets')
+@login_required
+def fixed_assets_list():
+    assets = FixedAsset.query.order_by(FixedAsset.category, FixedAsset.name).all()
+    total_cost       = sum(a.purchase_cost for a in assets if a.status != 'disposed')
+    total_book_value = sum(a.book_value for a in assets if a.status != 'disposed')
+    total_depreciation = total_cost - total_book_value
+    return render_template('assets/index.html',
+                           assets=assets,
+                           total_cost=total_cost,
+                           total_book_value=total_book_value,
+                           total_depreciation=total_depreciation)
+
+
+@main_bp.route('/assets/add', methods=['GET', 'POST'])
+@login_required
+def add_fixed_asset():
+    if request.method == 'POST':
+        try:
+            from datetime import date as _date
+            last = FixedAsset.query.order_by(FixedAsset.id.desc()).first()
+            asset_code = f"FA-{(last.id + 1 if last else 1):04d}"
+            asset = FixedAsset(
+                asset_code=asset_code,
+                name=request.form['name'],
+                category=request.form['category'],
+                description=request.form.get('description', ''),
+                location=request.form.get('location', ''),
+                serial_number=request.form.get('serial_number', ''),
+                supplier=request.form.get('supplier', ''),
+                purchase_date=datetime.strptime(request.form['purchase_date'], '%Y-%m-%d').date(),
+                purchase_cost=float(request.form['purchase_cost']),
+                useful_life_years=int(request.form.get('useful_life_years', 5)),
+                depreciation_method=request.form.get('depreciation_method', 'straight_line'),
+                salvage_value=float(request.form.get('salvage_value', 0)),
+                accumulated_depreciation=float(request.form.get('accumulated_depreciation', 0)),
+                status=request.form.get('status', 'active'),
+                notes=request.form.get('notes', '')
+            )
+            db.session.add(asset)
+            db.session.commit()
+            flash(f'Asset "{asset.name}" added successfully.', 'success')
+            return redirect(url_for('main.fixed_assets_list'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {str(e)}', 'error')
+    categories = ['Machinery', 'Furnace & Equipment', 'Vehicle', 'Building', 'IT Equipment', 'Furniture', 'Tools', 'Other']
+    return render_template('assets/form.html', asset=None, categories=categories)
+
+
+@main_bp.route('/assets/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_fixed_asset(id):
+    asset = FixedAsset.query.get_or_404(id)
+    if request.method == 'POST':
+        try:
+            asset.name = request.form['name']
+            asset.category = request.form['category']
+            asset.description = request.form.get('description', '')
+            asset.location = request.form.get('location', '')
+            asset.serial_number = request.form.get('serial_number', '')
+            asset.supplier = request.form.get('supplier', '')
+            asset.purchase_date = datetime.strptime(request.form['purchase_date'], '%Y-%m-%d').date()
+            asset.purchase_cost = float(request.form['purchase_cost'])
+            asset.useful_life_years = int(request.form.get('useful_life_years', 5))
+            asset.depreciation_method = request.form.get('depreciation_method', 'straight_line')
+            asset.salvage_value = float(request.form.get('salvage_value', 0))
+            asset.accumulated_depreciation = float(request.form.get('accumulated_depreciation', 0))
+            asset.status = request.form.get('status', 'active')
+            asset.notes = request.form.get('notes', '')
+            db.session.commit()
+            flash('Asset updated successfully.', 'success')
+            return redirect(url_for('main.fixed_assets_list'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {str(e)}', 'error')
+    categories = ['Machinery', 'Furnace & Equipment', 'Vehicle', 'Building', 'IT Equipment', 'Furniture', 'Tools', 'Other']
+    return render_template('assets/form.html', asset=asset, categories=categories)
+
+
+@main_bp.route('/assets/depreciate/<int:id>', methods=['POST'])
+@login_required
+def run_depreciation(id):
+    asset = FixedAsset.query.get_or_404(id)
+    months = int(request.form.get('months', 1))
+    charge = asset.monthly_depreciation * months
+    asset.accumulated_depreciation = min(
+        asset.purchase_cost - asset.salvage_value,
+        asset.accumulated_depreciation + charge
+    )
+    db.session.commit()
+    flash(f'Depreciation of PKR {charge:,.2f} applied for {months} month(s).', 'success')
+    return redirect(url_for('main.fixed_assets_list'))
+
+
+@main_bp.route('/assets/delete/<int:id>', methods=['POST'])
+@login_required
+def delete_fixed_asset(id):
+    asset = FixedAsset.query.get_or_404(id)
+    db.session.delete(asset)
+    db.session.commit()
+    flash('Asset deleted.', 'success')
+    return redirect(url_for('main.fixed_assets_list'))
+
+
+# ============================================================================
+# SHIFT MANAGEMENT MODULE
+# ============================================================================
+
+@main_bp.route('/hr/shifts')
+@login_required
+def shifts():
+    all_shifts = Shift.query.order_by(Shift.shift_type, Shift.start_time).all()
+    employees = Employee.query.filter_by(is_active=True).order_by(Employee.department, Employee.name).all()
+    assignments = ShiftAssignment.query.filter(
+        ShiftAssignment.effective_to == None
+    ).all()
+    assigned_map = {a.employee_id: a for a in assignments}
+    return render_template('hr/shifts.html', shifts=all_shifts, employees=employees,
+                           assigned_map=assigned_map, now=datetime.utcnow())
+
+
+@main_bp.route('/hr/shifts/add', methods=['POST'])
+@login_required
+def add_shift():
+    try:
+        shift = Shift(
+            name=request.form['name'],
+            shift_type=request.form.get('shift_type', 'day'),
+            start_time=request.form['start_time'],
+            end_time=request.form['end_time'],
+            duration_hours=float(request.form.get('duration_hours', 8)),
+            description=request.form.get('description', '')
+        )
+        db.session.add(shift)
+        db.session.commit()
+        flash(f'Shift "{shift.name}" created.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'error')
+    return redirect(url_for('main.shifts'))
+
+
+@main_bp.route('/hr/shifts/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_shift(id):
+    shift = Shift.query.get_or_404(id)
+    db.session.delete(shift)
+    db.session.commit()
+    flash('Shift deleted.', 'success')
+    return redirect(url_for('main.shifts'))
+
+
+@main_bp.route('/hr/shifts/assign', methods=['POST'])
+@login_required
+def assign_shift():
+    try:
+        employee_id = int(request.form['employee_id'])
+        shift_id = int(request.form['shift_id'])
+        from_date = datetime.strptime(request.form['effective_from'], '%Y-%m-%d').date()
+
+        # End any current active assignment for this employee
+        existing = ShiftAssignment.query.filter_by(
+            employee_id=employee_id, effective_to=None
+        ).all()
+        for ex in existing:
+            ex.effective_to = from_date
+
+        assignment = ShiftAssignment(
+            employee_id=employee_id,
+            shift_id=shift_id,
+            effective_from=from_date,
+            notes=request.form.get('notes', '')
+        )
+        db.session.add(assignment)
+        db.session.commit()
+        flash('Shift assigned successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'error')
+    return redirect(url_for('main.shifts'))
+
+
+@main_bp.route('/hr/shifts/unassign/<int:id>', methods=['POST'])
+@login_required
+def unassign_shift(id):
+    assignment = ShiftAssignment.query.get_or_404(id)
+    assignment.effective_to = datetime.utcnow().date()
+    db.session.commit()
+    flash('Shift unassigned.', 'success')
+    return redirect(url_for('main.shifts'))
+
 
 @socketio.on('connect', namespace='/admin')
 def admin_connect():

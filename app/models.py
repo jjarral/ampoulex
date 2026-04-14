@@ -1228,6 +1228,77 @@ class ReceiptVoucherLine(db.Model):
     amount = db.Column(db.Float, nullable=False)
 
 
+class FixedAsset(db.Model):
+    """Fixed assets: machinery, furnaces, vehicles, equipment"""
+    __tablename__ = 'fixed_asset'
+
+    id = db.Column(db.Integer, primary_key=True)
+    asset_code = db.Column(db.String(50), unique=True)
+    name = db.Column(db.String(150), nullable=False)
+    category = db.Column(db.String(50), nullable=False)   # Machinery, Furniture, Vehicle, Building, IT Equipment
+    description = db.Column(db.Text)
+    location = db.Column(db.String(100))
+    serial_number = db.Column(db.String(100))
+    supplier = db.Column(db.String(150))
+    purchase_date = db.Column(db.Date, nullable=False)
+    purchase_cost = db.Column(db.Float, nullable=False)
+    useful_life_years = db.Column(db.Integer, default=5)
+    depreciation_method = db.Column(db.String(20), default='straight_line')  # straight_line / reducing_balance
+    salvage_value = db.Column(db.Float, default=0)
+    accumulated_depreciation = db.Column(db.Float, default=0)
+    status = db.Column(db.String(20), default='active')   # active, disposed, under_maintenance
+    disposal_date = db.Column(db.Date)
+    disposal_value = db.Column(db.Float)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def book_value(self):
+        return max(0, self.purchase_cost - self.accumulated_depreciation)
+
+    @property
+    def annual_depreciation(self):
+        if self.depreciation_method == 'straight_line':
+            return (self.purchase_cost - self.salvage_value) / max(1, self.useful_life_years)
+        return 0
+
+    @property
+    def monthly_depreciation(self):
+        return self.annual_depreciation / 12
+
+
+class Shift(db.Model):
+    """Work shifts for 24/7 glass manufacturing"""
+    __tablename__ = 'shift'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+    shift_type = db.Column(db.String(20), default='day')  # day / evening / night
+    start_time = db.Column(db.String(5), nullable=False)  # HH:MM
+    end_time = db.Column(db.String(5), nullable=False)    # HH:MM
+    duration_hours = db.Column(db.Float, default=8)
+    description = db.Column(db.String(200))
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    assignments = db.relationship('ShiftAssignment', backref='shift', lazy=True)
+
+
+class ShiftAssignment(db.Model):
+    """Assigns employees to shifts for a date range"""
+    __tablename__ = 'shift_assignment'
+
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    shift_id = db.Column(db.Integer, db.ForeignKey('shift.id'), nullable=False)
+    effective_from = db.Column(db.Date, nullable=False)
+    effective_to = db.Column(db.Date)          # NULL = indefinite
+    notes = db.Column(db.String(200))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    employee = db.relationship('Employee', backref='shift_assignments')
+
+
 class AuditLog(db.Model):
     """Audit Trail for all accounting changes"""
     __tablename__ = 'audit_log'

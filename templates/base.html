@@ -179,8 +179,9 @@
 
     <!-- Main Sidebar -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        <a href="{{ url_for('main.dashboard') }}" class="brand-link">
-            <span class="brand-text font-weight-light">🏭 Ampoulex</span>
+        <a href="{{ url_for('main.dashboard') }}" class="brand-link" style="padding: 8px 15px; display:flex; align-items:center; gap:10px;">
+            <img src="/static/logo-transparent.png" alt="Ampoulex" style="height:38px; width:auto; filter: invert(1) brightness(2);">
+            <span class="brand-text font-weight-light" style="font-size:16px; letter-spacing:1px;">Ampoulex</span>
         </a>
         
         <div class="sidebar">
@@ -398,6 +399,12 @@
                                     <p>Payments</p>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.shifts') }}" class="nav-link {% if 'shift' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-business-time"></i>
+                                    <p>Shift Management</p>
+                                </a>
+                            </li>
                         </ul>
                     </li>
                     
@@ -481,6 +488,12 @@
     <a href="{{ url_for('main.audit_log') }}" class="nav-link">
         <i class="nav-icon fas fa-history"></i>
         <p>Audit Log</p>
+    </a>
+</li>
+<li class="nav-item">
+    <a href="{{ url_for('main.fixed_assets_list') }}" class="nav-link {% if 'fixed_asset' in request.endpoint or request.path.startswith('/assets') %}active{% endif %}">
+        <i class="nav-icon fas fa-industry"></i>
+        <p>Fixed Assets</p>
     </a>
 </li>
 
