@@ -4,7 +4,7 @@ import json
 import random
 from sqlalchemy import func
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, send_file, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, send_file, send_from_directory, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_socketio import emit
 
@@ -39,8 +39,8 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/favicon.ico')
 def favicon():
     return send_from_directory(
-        os.path.join(current_app.root_path, 'static'),
-        'favicon.ico', 
+        current_app.static_folder,
+        'favicon.ico',
         mimetype='image/vnd.microsoft.icon'
     )
 # ============================================================================
