@@ -1,7 +1,9 @@
 import os
+import urllib.request
+import urllib.error
 from pathlib import Path
 from datetime import datetime, timedelta
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_socketio import SocketIO
@@ -284,6 +286,25 @@ def create_app():
     def inject_globals():
         return dict(datetime=datetime, timedelta=timedelta, current_year=datetime.utcnow().year)
     
+    # Dev proxy: forward /__mockup/* to Vite dev server on port 3001
+    @app.route('/__mockup/', defaults={'path': ''})
+    @app.route('/__mockup/<path:path>')
+    def mockup_proxy(path):
+        target = f"http://127.0.0.1:3001/__mockup/{path}"
+        if request.query_string:
+            target += '?' + request.query_string.decode()
+        try:
+            req = urllib.request.Request(target, headers={
+                k: v for k, v in request.headers if k.lower() not in ('host', 'content-length')
+            })
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                content = resp.read()
+                excluded = {'transfer-encoding', 'connection', 'keep-alive'}
+                headers = {k: v for k, v in resp.headers.items() if k.lower() not in excluded}
+                return Response(content, status=resp.status, headers=headers)
+        except urllib.error.URLError:
+            return Response("Mockup sandbox not running", status=503)
+
     # Register blueprints
     from app.routes import main_bp
     app.register_blueprint(main_bp)

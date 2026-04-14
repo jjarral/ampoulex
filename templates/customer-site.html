@@ -40,7 +40,6 @@
         .hero-content, 
         .features-grid, 
         .products-grid, 
-        .testimonials-grid, 
         .footer-content, 
         .inquiry-container {
             max-width: 100%;
@@ -49,8 +48,7 @@
 
         /* Fix grid overflow */
         .products-grid, 
-        .features-grid, 
-        .testimonials-grid {
+        .features-grid {
             grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
             gap: 2rem;
             padding: 0 1rem;
@@ -195,15 +193,6 @@
         .qty-input.show { display: block; }
         .qty-input.error { border-color: var(--error); }
         
-        /* Testimonials */
-        .testimonials { padding: 6rem 2rem; background: linear-gradient(180deg, #f0f9ff 0%, #f8fafc 100%); }
-        .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto; }
-        .testimonial-card { background: white; padding: 2rem; border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid #e2e8f0; }
-        .testimonial-stars { color: var(--accent); margin-bottom: 1rem; }
-        .testimonial-text { color: var(--gray); font-style: italic; margin-bottom: 1.5rem; }
-        .testimonial-author { display: flex; align-items: center; gap: 1rem; }
-        .author-avatar { width: 50px; height: 50px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; }
-        
         /* Inquiry Form */
         .inquiry-section { padding: 6rem 2rem; background: white; }
         .inquiry-container { max-width: 1200px; margin: 0 auto; background: white; border-radius: var(--radius); box-shadow: var(--shadow-lg); overflow: hidden; display: grid; grid-template-columns: 1fr 1.5fr; }
@@ -269,7 +258,6 @@
                 <li><a href="#home" class="nav-link">Home</a></li>
                 <li><a href="#features" class="nav-link">Features</a></li>
                 <li><a href="#products" class="nav-link">Products</a></li>
-                <li><a href="#testimonials" class="nav-link">Testimonials</a></li>
                 <li><a href="#inquiry" class="btn-nav">Get Quote</a></li>
             </ul>
         </div>
@@ -385,40 +373,6 @@
                 </div>
             </div>
             {% endfor %}
-        </div>
-    </section>
-
-    <!-- Testimonials Section -->
-    <section class="testimonials" id="testimonials">
-        <div class="section-header" data-aos="fade-up">
-            <span class="section-tag">Testimonials</span>
-            <h2 class="section-title">Trusted by Industry Leaders</h2>
-        </div>
-        <div class="testimonials-grid">
-            <div class="testimonial-card" data-aos="fade-up">
-                <div class="testimonial-stars">★★★★★</div>
-                <p class="testimonial-text">"Ampoulex has been our trusted partner for over 5 years. Quality is consistent and delivery is always on time."</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">MK</div>
-                    <div><strong>Dr. Muhammad Khan</strong><br><small style="color: var(--gray);">CEO, PharmaPlus Ltd</small></div>
-                </div>
-            </div>
-            <div class="testimonial-card" data-aos="fade-up" data-aos-delay="100">
-                <div class="testimonial-stars">★★★★★</div>
-                <p class="testimonial-text">"The white label service helped us launch our product line quickly. Their team understood our requirements perfectly."</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">SA</div>
-                    <div><strong>Sarah Ahmed</strong><br><small style="color: var(--gray);">Director, MediCare Hospital</small></div>
-                </div>
-            </div>
-            <div class="testimonial-card" data-aos="fade-up" data-aos-delay="200">
-                <div class="testimonial-stars">★★★★★</div>
-                <p class="testimonial-text">"Excellent quality ampoules at competitive prices. The technical specifications meet all our requirements."</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">AR</div>
-                    <div><strong>Ali Raza</strong><br><small style="color: var(--gray);">Procurement Head, CureWell</small></div>
-                </div>
-            </div>
         </div>
     </section>
 
