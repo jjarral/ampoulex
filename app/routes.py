@@ -4186,6 +4186,184 @@ def reject_leave(id):
 
 
 # ============================================================================
+# PAYROLL RUN – SPREADSHEET API
+# ============================================================================
+
+def _payment_to_dict(p):
+    return {
+        'id': p.id,
+        'employee_id': p.employee_id,
+        'employee_name': p.employee.name,
+        'department': p.employee.department or '',
+        'base_salary': p.base_salary,
+        'allowances': p.allowances,
+        'overtime_pay': p.overtime_pay,
+        'bonuses': p.bonuses,
+        'loan_deduction': p.loan_deduction,
+        'other_deductions': p.other_deductions,
+        'income_tax': p.income_tax,
+        'total_earnings': p.total_earnings,
+        'total_deductions': p.total_deductions,
+        'net_pay': p.net_pay,
+        'payment_method': p.payment_method or 'bank_transfer',
+        'status': p.status,
+        'notes': p.notes or '',
+        'period_start': p.period_start.isoformat(),
+        'period_end': p.period_end.isoformat(),
+    }
+
+
+@main_bp.route('/payroll/run')
+@login_required
+def payroll_run():
+    from datetime import date
+    default_month = date.today().strftime('%Y-%m')
+    return render_template('payroll/run.html', default_month=default_month)
+
+
+@main_bp.route('/api/payroll/run')
+@login_required
+def api_payroll_run_get():
+    from calendar import monthrange
+    month_str = request.args.get('month')
+    if not month_str:
+        return jsonify({'error': 'month parameter required (YYYY-MM)'}), 400
+    try:
+        year, month = int(month_str.split('-')[0]), int(month_str.split('-')[1])
+    except Exception:
+        return jsonify({'error': 'Invalid month format'}), 400
+
+    from datetime import date
+    period_start = date(year, month, 1)
+    period_end = date(year, month, monthrange(year, month)[1])
+
+    employees = Employee.query.filter_by(is_active=True).order_by(Employee.department, Employee.name).all()
+
+    existing = {p.employee_id: p for p in PayrollPayment.query.filter(
+        PayrollPayment.period_start == period_start
+    ).all()}
+
+    results = []
+    new_records = []
+    for emp in employees:
+        if emp.id in existing:
+            results.append(_payment_to_dict(existing[emp.id]))
+        else:
+            annual_salary = emp.base_salary * 12
+            monthly_tax, _ = calculate_monthly_tax_deduction(annual_salary)
+            loan_ded = min(emp.outstanding_loan, emp.base_salary * 0.1)
+            total_earnings = emp.base_salary
+            total_deductions = monthly_tax + loan_ded
+            net = total_earnings - total_deductions
+            p = PayrollPayment(
+                employee_id=emp.id,
+                period_start=period_start,
+                period_end=period_end,
+                base_salary=emp.base_salary,
+                allowances=0,
+                overtime_pay=0,
+                bonuses=0,
+                total_earnings=total_earnings,
+                income_tax=monthly_tax,
+                loan_deduction=loan_ded,
+                other_deductions=0,
+                total_deductions=total_deductions,
+                net_pay=net,
+                payment_method='bank_transfer',
+                bank_name=emp.bank_name,
+                bank_account=emp.bank_account,
+                status='draft',
+                notes=''
+            )
+            new_records.append(p)
+
+    if new_records:
+        db.session.add_all(new_records)
+        db.session.commit()
+        for p in new_records:
+            results.append(_payment_to_dict(p))
+
+    results.sort(key=lambda x: (x['department'], x['employee_name']))
+    return jsonify(results)
+
+
+@main_bp.route('/api/payroll/payments/<int:pid>', methods=['PATCH'])
+@login_required
+def api_payroll_payment_patch(pid):
+    p = PayrollPayment.query.get_or_404(pid)
+    data = request.get_json(force=True)
+
+    editable = ['allowances', 'overtime_pay', 'bonuses', 'loan_deduction',
+                'other_deductions', 'payment_method', 'notes', 'status']
+    for field in editable:
+        if field in data:
+            val = data[field]
+            if field in ('allowances', 'overtime_pay', 'bonuses', 'loan_deduction', 'other_deductions'):
+                val = float(val or 0)
+            setattr(p, field, val)
+
+    annual_salary = p.employee.base_salary * 12
+    monthly_tax, _ = calculate_monthly_tax_deduction(annual_salary)
+    p.income_tax = monthly_tax
+    p.total_earnings = p.base_salary + p.allowances + p.overtime_pay + p.bonuses
+    p.total_deductions = p.income_tax + p.loan_deduction + p.other_deductions
+    p.net_pay = p.total_earnings - p.total_deductions
+
+    if p.status == 'processed' and not p.processed_by:
+        p.processed_by = current_user.username
+        p.processed_at = datetime.utcnow()
+        if p.loan_deduction > 0 and p.employee.outstanding_loan > 0:
+            p.employee.outstanding_loan = max(0, p.employee.outstanding_loan - p.loan_deduction)
+
+    db.session.commit()
+    return jsonify(_payment_to_dict(p))
+
+
+@main_bp.route('/api/payroll/run/process-all', methods=['POST'])
+@login_required
+def api_payroll_process_all():
+    from calendar import monthrange
+    data = request.get_json(force=True)
+    month_str = data.get('month')
+    if not month_str:
+        return jsonify({'error': 'month required'}), 400
+    try:
+        year, month = int(month_str.split('-')[0]), int(month_str.split('-')[1])
+    except Exception:
+        return jsonify({'error': 'Invalid month'}), 400
+
+    from datetime import date
+    period_start = date(year, month, 1)
+
+    payments = PayrollPayment.query.filter(
+        PayrollPayment.period_start == period_start,
+        PayrollPayment.status.in_(['draft', 'pending'])
+    ).all()
+
+    for p in payments:
+        p.status = 'processed'
+        p.processed_by = current_user.username
+        p.processed_at = datetime.utcnow()
+        p.payment_date = date.today()
+        if p.loan_deduction > 0 and p.employee.outstanding_loan > 0:
+            p.employee.outstanding_loan = max(0, p.employee.outstanding_loan - p.loan_deduction)
+
+    db.session.commit()
+    return jsonify({'processed': len(payments)})
+
+
+@main_bp.route('/api/payroll/payments/<int:pid>', methods=['DELETE'])
+@login_required
+def api_payroll_payment_delete(pid):
+    p = PayrollPayment.query.get_or_404(pid)
+    if p.status == 'processed':
+        return jsonify({'error': 'Cannot delete a processed payment'}), 400
+    db.session.delete(p)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+
+# ============================================================================
 # PAYROLL PAYMENTS
 # ============================================================================
 

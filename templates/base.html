@@ -387,6 +387,12 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a href="{{ url_for('main.payroll_run') }}" class="nav-link {% if request.endpoint == 'main.payroll_run' %}active{% endif %}">
+                                    <i class="nav-icon fas fa-play-circle"></i>
+                                    <p>Run Payroll</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a href="{{ url_for('main.payroll_payments') }}" class="nav-link {% if 'payment' in request.endpoint %}active{% endif %}">
                                     <i class="nav-icon fas fa-money-bill"></i>
                                     <p>Payments</p>
