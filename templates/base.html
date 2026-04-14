@@ -600,6 +600,26 @@
                             <p>Settings</p>
                         </a>
                     </li>
+
+                    <!-- Admin: User Management -->
+                    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.admin_users') }}" class="nav-link {% if 'admin_user' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-users-cog"></i>
+                            <p>User Management</p>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Change Password -->
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.change_password') }}" class="nav-link {% if 'change_password' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-key"></i>
+                            <p>Change Password</p>
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
             </nav>
         </div>

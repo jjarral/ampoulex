@@ -14,14 +14,34 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256))
     role = db.Column(db.String(20), default='user')
-    is_active = db.Column(db.Boolean, default=True, nullable=False)  # ✅ ADD THIS LINE
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    pass
+    last_login = db.Column(db.DateTime, nullable=True)
+    failed_login_attempts = db.Column(db.Integer, default=0, nullable=False)
+    locked_until = db.Column(db.DateTime, nullable=True)
+    must_change_password = db.Column(db.Boolean, default=False, nullable=False)
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-    
+
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def is_locked(self):
+        if self.locked_until and self.locked_until > datetime.utcnow():
+            return True
+        return False
+
+    def record_failed_login(self):
+        self.failed_login_attempts = (self.failed_login_attempts or 0) + 1
+        if self.failed_login_attempts >= 5:
+            from datetime import timedelta
+            self.locked_until = datetime.utcnow() + timedelta(minutes=15)
+
+    def record_successful_login(self):
+        self.failed_login_attempts = 0
+        self.locked_until = None
+        self.last_login = datetime.utcnow()
 
 class Product(db.Model):
     __tablename__ = 'product'

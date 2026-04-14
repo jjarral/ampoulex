@@ -473,20 +473,45 @@ def index():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
-    
+
     if request.method == 'POST':
-        username = request.form.get('username', '')
+        username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
+
+        if not username or not password:
+            flash('Username and password are required.', 'error')
+            return render_template('auth/login.html')
+
         user = User.query.filter_by(username=username).first()
-        
-        if user and user.check_password(password) and user.is_active:
+
+        # Account lockout check
+        if user and user.is_locked():
+            from datetime import timezone
+            remaining = int((user.locked_until - datetime.utcnow()).total_seconds() / 60) + 1
+            flash(f'Account locked due to too many failed attempts. Try again in {remaining} minute(s).', 'error')
+            return render_template('auth/login.html')
+
+        if user and user.is_active and user.check_password(password):
+            user.record_successful_login()
+            db.session.commit()
             remember = request.form.get('remember') == 'on'
             session.permanent = True
             login_user(user, remember=remember)
+            if user.must_change_password:
+                flash('You must change your password before continuing.', 'warning')
+                return redirect(url_for('main.change_password'))
             next_page = request.args.get('next')
             return redirect(next_page or url_for('main.dashboard'))
-        flash('Invalid username or password', 'error')
-    
+        else:
+            # Record failed attempt if user exists
+            if user:
+                user.record_failed_login()
+                db.session.commit()
+                if user.is_locked():
+                    flash('Too many failed attempts. Account locked for 15 minutes.', 'error')
+                    return render_template('auth/login.html')
+            flash('Invalid username or password.', 'error')
+
     return render_template('auth/login.html')
 
 
@@ -495,6 +520,150 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('main.login'))
+
+
+# ============================================================================
+# CHANGE PASSWORD
+# ============================================================================
+
+@main_bp.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        current_pw = request.form.get('current_password', '')
+        new_pw = request.form.get('new_password', '')
+        confirm_pw = request.form.get('confirm_password', '')
+
+        if not current_user.check_password(current_pw):
+            flash('Current password is incorrect.', 'error')
+        elif len(new_pw) < 8:
+            flash('New password must be at least 8 characters.', 'error')
+        elif new_pw != confirm_pw:
+            flash('Passwords do not match.', 'error')
+        elif new_pw == current_pw:
+            flash('New password must be different from the current password.', 'error')
+        else:
+            current_user.set_password(new_pw)
+            current_user.must_change_password = False
+            db.session.commit()
+            flash('Password changed successfully.', 'success')
+            return redirect(url_for('main.dashboard'))
+
+    return render_template('auth/change_password.html')
+
+
+# ============================================================================
+# USER MANAGEMENT (admin only)
+# ============================================================================
+
+def admin_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            flash('Admin access required.', 'error')
+            return redirect(url_for('main.dashboard'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+@main_bp.route('/admin/users')
+@login_required
+@admin_required
+def admin_users():
+    users = User.query.order_by(User.created_at.desc()).all()
+    return render_template('admin/users.html', users=users)
+
+
+@main_bp.route('/admin/users/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_create_user():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+        role = request.form.get('role', 'user')
+        must_change = request.form.get('must_change_password') == 'on'
+
+        errors = []
+        if not username:
+            errors.append('Username is required.')
+        elif User.query.filter_by(username=username).first():
+            errors.append('Username already exists.')
+        if not email:
+            errors.append('Email is required.')
+        elif User.query.filter_by(email=email).first():
+            errors.append('Email already exists.')
+        if len(password) < 8:
+            errors.append('Password must be at least 8 characters.')
+        if role not in ('admin', 'user', 'manager'):
+            errors.append('Invalid role.')
+
+        if errors:
+            for e in errors:
+                flash(e, 'error')
+        else:
+            new_user = User(
+                username=username,
+                email=email,
+                role=role,
+                is_active=True,
+                must_change_password=must_change,
+                failed_login_attempts=0,
+            )
+            new_user.set_password(password)
+            db.session.add(new_user)
+            db.session.commit()
+            flash(f'User "{username}" created successfully.', 'success')
+            return redirect(url_for('main.admin_users'))
+
+    return render_template('admin/create_user.html')
+
+
+@main_bp.route('/admin/users/<int:user_id>/toggle', methods=['POST'])
+@login_required
+@admin_required
+def admin_toggle_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash('You cannot deactivate your own account.', 'error')
+    else:
+        user.is_active = not user.is_active
+        db.session.commit()
+        state = 'activated' if user.is_active else 'deactivated'
+        flash(f'User "{user.username}" {state}.', 'success')
+    return redirect(url_for('main.admin_users'))
+
+
+@main_bp.route('/admin/users/<int:user_id>/unlock', methods=['POST'])
+@login_required
+@admin_required
+def admin_unlock_user(user_id):
+    user = User.query.get_or_404(user_id)
+    user.locked_until = None
+    user.failed_login_attempts = 0
+    db.session.commit()
+    flash(f'User "{user.username}" unlocked.', 'success')
+    return redirect(url_for('main.admin_users'))
+
+
+@main_bp.route('/admin/users/<int:user_id>/reset-password', methods=['POST'])
+@login_required
+@admin_required
+def admin_reset_password(user_id):
+    user = User.query.get_or_404(user_id)
+    new_pw = request.form.get('new_password', '')
+    if len(new_pw) < 8:
+        flash('Password must be at least 8 characters.', 'error')
+    else:
+        user.set_password(new_pw)
+        user.must_change_password = True
+        user.failed_login_attempts = 0
+        user.locked_until = None
+        db.session.commit()
+        flash(f'Password reset for "{user.username}". They must change it on next login.', 'success')
+    return redirect(url_for('main.admin_users'))
 
 
 # ============================================================================
