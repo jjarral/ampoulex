@@ -3453,8 +3453,101 @@ def delete_expense(id):
     except Exception as e:
         db.session.rollback()
         flash(f'Error: {str(e)}', 'error')
-    
     return redirect(url_for('main.expenses'))
+
+
+# ============================================================================
+# EXPENSES JSON API (for inline spreadsheet editing)
+# ============================================================================
+
+def _expense_to_dict(e):
+    return {
+        'id': e.id,
+        'date': e.date.strftime('%Y-%m-%d') if e.date else '',
+        'category': e.category or '',
+        'description': e.description or '',
+        'amount': e.amount or 0,
+        'paid_by': e.paid_by or '',
+        'payment_method': e.payment_method or '',
+        'reference_number': e.reference_number or '',
+        'approved_by': e.approved_by or '',
+        'status': e.status or 'pending',
+    }
+
+@main_bp.route('/api/expenses', methods=['GET'])
+@login_required
+def api_expenses_list():
+    expenses = Expense.query.order_by(Expense.date.desc()).all()
+    return jsonify([_expense_to_dict(e) for e in expenses])
+
+@main_bp.route('/api/expenses', methods=['POST'])
+@login_required
+def api_expenses_create():
+    data = request.get_json() or {}
+    try:
+        date_str = data.get('date') or datetime.utcnow().strftime('%Y-%m-%d')
+        expense = Expense(
+            date=datetime.strptime(date_str, '%Y-%m-%d').date(),
+            category=data.get('category', 'General'),
+            description=data.get('description', ''),
+            amount=float(data.get('amount') or 0),
+            status=data.get('status', 'pending'),
+            paid_by=data.get('paid_by', ''),
+            payment_method=data.get('payment_method', ''),
+            reference_number=data.get('reference_number', ''),
+            approved_by=data.get('approved_by', ''),
+        )
+        db.session.add(expense)
+        db.session.commit()
+        return jsonify({'success': True, 'expense': _expense_to_dict(expense)}), 201
+    except Exception as ex:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(ex)}), 400
+
+@main_bp.route('/api/expenses/<int:id>', methods=['PATCH'])
+@login_required
+def api_expenses_update(id):
+    expense = Expense.query.get_or_404(id)
+    data = request.get_json() or {}
+    try:
+        if 'date' in data:
+            expense.date = datetime.strptime(data['date'], '%Y-%m-%d').date()
+        if 'category' in data:
+            expense.category = data['category']
+        if 'description' in data:
+            expense.description = data['description']
+        if 'amount' in data:
+            expense.amount = float(data['amount'] or 0)
+        if 'status' in data:
+            old_status = expense.status
+            expense.status = data['status']
+            if old_status != 'paid' and expense.status == 'paid':
+                create_journal_entry_for_expense(expense)
+        if 'paid_by' in data:
+            expense.paid_by = data['paid_by']
+        if 'payment_method' in data:
+            expense.payment_method = data['payment_method']
+        if 'reference_number' in data:
+            expense.reference_number = data['reference_number']
+        if 'approved_by' in data:
+            expense.approved_by = data['approved_by']
+        db.session.commit()
+        return jsonify({'success': True, 'expense': _expense_to_dict(expense)})
+    except Exception as ex:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(ex)}), 400
+
+@main_bp.route('/api/expenses/<int:id>', methods=['DELETE'])
+@login_required
+def api_expenses_delete(id):
+    expense = Expense.query.get_or_404(id)
+    try:
+        db.session.delete(expense)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as ex:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(ex)}), 400
 
 
 # ============================================================================
