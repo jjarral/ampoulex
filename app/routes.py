@@ -4,7 +4,7 @@ import json
 import random
 from sqlalchemy import func
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, send_file, send_from_directory, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, send_file, send_from_directory, current_app, session
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_socketio import emit
 
@@ -481,6 +481,7 @@ def login():
         
         if user and user.check_password(password) and user.is_active:
             remember = request.form.get('remember') == 'on'
+            session.permanent = True
             login_user(user, remember=remember)
             next_page = request.args.get('next')
             return redirect(next_page or url_for('main.dashboard'))

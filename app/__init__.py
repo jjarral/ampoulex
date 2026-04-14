@@ -252,10 +252,11 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    # SameSite=None + Secure=True allows cookies in all contexts including iframes
+    # (Replit preview and Cloud Run both serve over HTTPS, so Secure is always safe)
+    app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+    app.config['SESSION_COOKIE_SECURE'] = True
     app.config['SESSION_COOKIE_HTTPONLY'] = True
-    # Use Secure cookies when running behind HTTPS proxy
-    app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
     
     # Validate DATABASE_URL
     db_url = os.environ.get('DATABASE_URL')
