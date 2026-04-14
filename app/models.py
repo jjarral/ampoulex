@@ -127,8 +127,7 @@ class InquiryItem(db.Model):
     notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # ✅ Fix this line (use lazy=True instead of back_populates):
-    inquiry = db.relationship('Inquiry', lazy=True)
+    inquiry = db.relationship('Inquiry', lazy=True, overlaps="inquiry_items")
     
     # ✅ Add product relationship (without backref to avoid conflicts):
     product = db.relationship('Product', lazy=True) 
@@ -167,7 +166,7 @@ class OrderItem(db.Model):
     
     # Relationship to Product (no backref to avoid conflict)
     product = db.relationship('Product', lazy=True)
-    order = db.relationship('Order', lazy=True)  # Changed from back_populates
+    order = db.relationship('Order', lazy=True, overlaps="order_items")
     
 class Employee(db.Model):
     __tablename__ = 'employee'
@@ -1223,3 +1222,7 @@ class AuditLog(db.Model):
     username = db.Column(db.String(100))
     ip_address = db.Column(db.String(50))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def created_at(self):
+        return self.timestamp

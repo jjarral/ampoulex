@@ -479,8 +479,9 @@ def login():
         password = request.form.get('password', '')
         user = User.query.filter_by(username=username).first()
         
-        if user and user.check_password(password):
-            login_user(user)
+        if user and user.check_password(password) and user.is_active:
+            remember = request.form.get('remember') == 'on'
+            login_user(user, remember=remember)
             next_page = request.args.get('next')
             return redirect(next_page or url_for('main.dashboard'))
         flash('Invalid username or password', 'error')
@@ -545,7 +546,7 @@ def products():
 def add_product():
     if request.method == 'POST':
         try:
-            base_price = integer(request.form.get('base_price', 0))
+            base_price = int(request.form.get('base_price', 0) or 0)
             
             product = Product(
                 name=request.form.get('name', ''),
@@ -623,7 +624,7 @@ def edit_product(id):
     
     if request.method == 'POST':
         try:
-            base_price = integer(request.form.get('base_price', 0))
+            base_price = int(request.form.get('base_price', 0) or 0)
             
             product.name = request.form.get('name', '')
             product.specification = request.form.get('specification', '')
@@ -2642,16 +2643,98 @@ def analytics_dashboard():
         Order.created_at >= last_30_days
     ).count()
     
+    revenue_90_days = db.session.query(db.func.sum(Order.total_amount)).filter(
+        Order.status.in_(['completed', 'processing']),
+        Order.created_at >= last_90_days
+    ).scalar() or 0
+
+    orders_90_days = Order.query.filter(Order.created_at >= last_90_days).count()
     avg_order_value = revenue_30_days / orders_30_days if orders_30_days > 0 else 0
-    growth_rate = 0 # Placeholder for calc
-    
-    return render_template('analytics/dashboard.html', 
+
+    # Previous 30-day period for growth rate
+    prev_30_start = today - timedelta(days=60)
+    prev_30_end = today - timedelta(days=30)
+    revenue_prev_30 = db.session.query(db.func.sum(Order.total_amount)).filter(
+        Order.status.in_(['completed', 'processing']),
+        Order.created_at >= prev_30_start,
+        Order.created_at < prev_30_end
+    ).scalar() or 0
+    growth_rate = ((revenue_30_days - revenue_prev_30) / revenue_prev_30 * 100) if revenue_prev_30 > 0 else 0
+
+    # Customer metrics
+    total_customers = Customer.query.count()
+    new_customers_30_days = Customer.query.filter(Customer.created_at >= last_30_days).count() if hasattr(Customer, 'created_at') else 0
+    customer_retention_rate = ((total_customers - new_customers_30_days) / total_customers * 100) if total_customers > 0 else 0
+
+    # Total revenue (all time)
+    total_revenue = db.session.query(db.func.sum(Order.total_amount)).filter(
+        Order.status.in_(['completed', 'processing'])
+    ).scalar() or 0
+
+    # Inventory turnover (simple approximation)
+    inventory_turnover = (revenue_90_days / (total_revenue / 4)) if total_revenue > 0 else 0
+
+    # Top products by revenue
+    top_products_raw = db.session.query(
+        Product.name,
+        Product.color if hasattr(Product, 'color') else db.literal('N/A'),
+        db.func.sum(OrderItem.quantity).label('total_sold'),
+        db.func.sum(OrderItem.subtotal).label('total_revenue')
+    ).join(OrderItem, OrderItem.product_id == Product.id)\
+     .group_by(Product.id, Product.name)\
+     .order_by(db.desc('total_revenue'))\
+     .limit(10).all()
+
+    class _ProductRow:
+        def __init__(self, name, color, total_sold, total_revenue):
+            self.name = name
+            self.color = color or 'N/A'
+            self.total_sold = total_sold or 0
+            self.total_revenue = float(total_revenue or 0)
+
+    top_products = [_ProductRow(*r) for r in top_products_raw]
+
+    # Monthly revenue (last 6 months) — list of (label, value) tuples
+    monthly_revenue = []
+    for i in range(5, -1, -1):
+        m_start = today.replace(day=1) - timedelta(days=i * 30)
+        m_end = m_start + timedelta(days=30)
+        m_rev = db.session.query(db.func.sum(Order.total_amount)).filter(
+            Order.status.in_(['completed', 'processing']),
+            Order.created_at >= m_start,
+            Order.created_at < m_end
+        ).scalar() or 0
+        monthly_revenue.append((m_start.strftime('%b %Y'), float(m_rev)))
+
+    # Order status distribution
+    order_status_dist = db.session.query(
+        Order.status, db.func.count(Order.id)
+    ).group_by(Order.status).all()
+
+    # Payment status distribution
+    payment_status_dist = db.session.query(
+        Order.payment_status, db.func.count(Order.id)
+    ).group_by(Order.payment_status).all() if hasattr(Order, 'payment_status') else []
+
+    return render_template('analytics/dashboard.html',
                          revenue_today=revenue_today,
                          revenue_7_days=revenue_7_days,
                          revenue_30_days=revenue_30_days,
+                         revenue_90_days=revenue_90_days,
                          orders_today=orders_today,
+                         orders_7_days=orders_7_days,
+                         orders_30_days=orders_30_days,
                          avg_order_value=avg_order_value,
-                         growth_rate=growth_rate)
+                         growth_rate=growth_rate,
+                         total_customers=total_customers,
+                         new_customers_30_days=new_customers_30_days,
+                         customer_retention_rate=customer_retention_rate,
+                         total_revenue=total_revenue,
+                         inventory_turnover=inventory_turnover,
+                         top_products=top_products,
+                         monthly_revenue=monthly_revenue,
+                         order_status_dist=order_status_dist,
+                         payment_status_dist=payment_status_dist)
 
 
 # ============================================================================
@@ -2948,12 +3031,12 @@ def inquiry_count():
 def revenue_data():
     six_months_ago = datetime.utcnow() - timedelta(days=180)
     monthly_revenue = db.session.query(
-        db.func.strftime('%Y-%m', Order.created_at),
+        db.func.to_char(Order.created_at, 'YYYY-MM'),
         db.func.sum(Order.total_amount)
     ).filter(
         Order.created_at >= six_months_ago,
         Order.status.in_(['completed', 'processing'])
-    ).group_by(db.func.strftime('%Y-%m', Order.created_at)).all()
+    ).group_by(db.func.to_char(Order.created_at, 'YYYY-MM')).all()
     
     return jsonify({
         'labels': [r[0] for r in monthly_revenue],
@@ -3408,24 +3491,24 @@ def balance_sheet():
         RawMaterial.current_stock > 0
     ).all())
 
+    # Liabilities (from JournalEntry)
+    liability_account_ids = [a.id for a in Account.query.filter_by(account_type='Liability').all()]
+
+    # Accounts Payable (from Supplier balances or Liability accounts)
+    accounts_payable = db.session.query(db.func.sum(SupplierInvoice.total_amount)).filter(
+        SupplierInvoice.status == 'pending'
+    ).scalar() or 0
+
     # Tax Payable (from Order tax_amount for unpaid/partial orders)
     tax_payable = db.session.query(db.func.sum(Order.tax_amount)).filter(
         Order.payment_status.in_(['unpaid', 'partial']),
         Order.status != 'cancelled'
     ).scalar() or 0
-    
+
     total_current_assets = total_cash + accounts_receivable + inventory_value
     fixed_assets = 0  # Placeholder for fixed assets (machinery, equipment, etc.)
     total_current_liabilities = accounts_payable + tax_payable
     total_assets = total_current_assets
-    
-    # Liabilities (from JournalEntry)
-    liability_account_ids = [a.id for a in Account.query.filter_by(account_type='Liability').all()]
-    
-    # Accounts Payable (from Supplier balances or Liability accounts)
-    accounts_payable = db.session.query(db.func.sum(SupplierInvoice.total_amount)).filter(
-        SupplierInvoice.status == 'pending'
-    ).scalar() or 0
 
     total_liabilities = 0
     for account_id in liability_account_ids:
@@ -3475,9 +3558,11 @@ def balance_sheet():
     retained_earnings = total_revenue - total_expenses
     equity += retained_earnings
     
+    long_term_liabilities = max(0, total_liabilities - total_current_liabilities)
+
     return render_template('financials/balance_sheet.html',
-                         bank_balance=bank_balance,  # ✅ ADD THIS
-                         petty_cash_balance=petty_cash_balance,  # ✅ ADD THIS
+                         bank_balance=bank_balance,
+                         petty_cash_balance=petty_cash_balance,
                          total_cash=total_cash,
                          accounts_receivable=accounts_receivable,
                          inventory_value=inventory_value,
@@ -3487,6 +3572,7 @@ def balance_sheet():
                          fixed_assets=fixed_assets,
                          accounts_payable=accounts_payable,
                          total_current_liabilities=total_current_liabilities,
+                         long_term_liabilities=long_term_liabilities,
                          total_current_assets=total_current_assets,
                          total_assets=total_assets,
                          total_liabilities=total_liabilities,
@@ -3500,8 +3586,8 @@ def cash_flow():
     end_date = request.args.get('end_date', datetime.utcnow().strftime('%Y-%m-%d'))
     start_date_obj = datetime.strptime(start_date, '%Y-%m-%d')
 
-    opening_bank_balance = db.session.query(db.func.sum(db.case([(Accounting.transaction_type == 'credit', Accounting.amount)], else_=-Accounting.amount))).filter(Accounting.account_type == 'bank', Accounting.date < start_date_obj).scalar() or 0
-    opening_petty_cash = db.session.query(db.func.sum(db.case([(Accounting.transaction_type == 'credit', Accounting.amount)], else_=-Accounting.amount))).filter(Accounting.account_type == 'petty_cash', Accounting.date < start_date_obj).scalar() or 0
+    opening_bank_balance = db.session.query(db.func.sum(db.case((Accounting.transaction_type == 'credit', Accounting.amount), else_=-Accounting.amount))).filter(Accounting.account_type == 'bank', Accounting.date < start_date_obj).scalar() or 0
+    opening_petty_cash = db.session.query(db.func.sum(db.case((Accounting.transaction_type == 'credit', Accounting.amount), else_=-Accounting.amount))).filter(Accounting.account_type == 'petty_cash', Accounting.date < start_date_obj).scalar() or 0
     opening_cash = opening_bank_balance + opening_petty_cash
 
     cash_from_sales = db.session.query(db.func.sum(Order.paid_amount)).filter(
@@ -3541,8 +3627,11 @@ def cash_flow():
                          end_date=end_date,
                          opening_cash=opening_cash,
                          cash_from_sales=cash_from_sales,
-                         cash_for_expenses=cash_for_expenses,
-                         cash_for_payroll=cash_for_payroll,
+                         cash_from_expenses=cash_for_expenses,
+                         cash_from_payroll=cash_for_payroll,
+                         cash_from_investing=cash_from_investing,
+                         cash_from_loans=cash_from_loans,
+                         cash_to_loans=cash_to_loans,
                          net_cash_from_operations=net_cash_from_operations,
                          net_cash_from_investing=net_cash_from_investing,
                          net_cash_from_financing=net_cash_from_financing,
@@ -4019,9 +4108,11 @@ def painting_dashboard():
     """Painting service dashboard"""
     active_orders = PaintingOrder.query.filter_by(status='in_progress').all()
     pending_orders = PaintingOrder.query.filter_by(status='pending').all()
+    now = datetime.utcnow()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     completed_this_month = PaintingOrder.query.filter(
         PaintingOrder.status == 'completed',
-        db.func.strftime('%Y-%m', PaintingOrder.order_date) == datetime.utcnow().strftime('%Y-%m')
+        PaintingOrder.order_date >= month_start
     ).all()
     
     total_revenue = sum(o.total_amount for o in completed_this_month)

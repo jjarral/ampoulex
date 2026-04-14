@@ -5,6 +5,7 @@ from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_socketio import SocketIO
+from werkzeug.middleware.proxy_fix import ProxyFix
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -243,11 +244,18 @@ def create_app():
                 template_folder=str(TEMPLATES_FOLDER),
                 static_folder=str(STATIC_DIR))
     
+    # Apply ProxyFix for Cloud Run / reverse proxy (trusts X-Forwarded-For headers)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
     # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    # Use Secure cookies when running behind HTTPS proxy
+    app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
     
     # Validate DATABASE_URL
     db_url = os.environ.get('DATABASE_URL')
@@ -270,10 +278,10 @@ def create_app():
     login_manager.login_view = 'main.login'
     login_manager.login_message_category = 'info'
     
-    # ✅ MAKE DATETIME AVAILABLE IN ALL TEMPLATES
+    # Make datetime and current_year available in all templates
     @app.context_processor
-    def inject_datetime():
-        return dict(datetime=datetime, timedelta=timedelta)
+    def inject_globals():
+        return dict(datetime=datetime, timedelta=timedelta, current_year=datetime.utcnow().year)
     
     # Register blueprints
     from app.routes import main_bp

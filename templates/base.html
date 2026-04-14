@@ -669,7 +669,6 @@
     // Connect to Socket.IO server (only once - no duplicates)
     if (typeof window.socket === 'undefined') {
         window.socket = io('/admin', {
-            path: '/socket.io/admin',
             reconnection: true,
             reconnectionAttempts: 5
         });
