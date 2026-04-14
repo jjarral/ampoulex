@@ -13,4 +13,5 @@ python-barcode==0.15.1
 qrcode==7.4.2
 Pillow==10.1.0
 pandas==2.1.4
-eventlet==0.33.3
+eventlet==0.41.0
+setuptools>=68.0
