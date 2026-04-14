@@ -69,6 +69,41 @@
         .status-closed { background: #d1fae5; color: #065f46; }
         .status-converted { background: #e0e7ff; color: #3730a3; }
         
+        /* ── Compact Sidebar ── */
+        .nav-sidebar .nav-link {
+            padding: 5px 10px 5px 15px !important;
+            font-size: 13px !important;
+        }
+        .nav-sidebar .nav-icon {
+            font-size: 13px !important;
+            margin-right: 6px !important;
+            width: 1.2rem !important;
+        }
+        .nav-sidebar .nav-header {
+            padding: 8px 10px 4px 12px !important;
+            font-size: 10px !important;
+            letter-spacing: 0.08em !important;
+            color: rgba(255,255,255,0.45) !important;
+        }
+        .nav-sidebar > .nav-item > .nav-link {
+            margin-bottom: 1px !important;
+        }
+        .nav-treeview .nav-link {
+            padding: 4px 10px 4px 28px !important;
+            font-size: 12.5px !important;
+        }
+        .nav-treeview .nav-icon {
+            font-size: 11px !important;
+        }
+        .sidebar {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.15) transparent;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        .user-panel { padding-bottom: 8px !important; margin-bottom: 4px !important; margin-top: 8px !important; }
+
         /* Low stock alert badge */
         .badge-low-stock {
             background: #fee2e2;
@@ -194,451 +229,406 @@
             </div>
             
             <!-- Sidebar Menu -->
-            <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                    <!-- Dashboard -->
+            <nav class="mt-1">
+                <ul class="nav nav-pills nav-sidebar flex-column nav-compact nav-child-indent" data-widget="treeview" data-accordion="false" role="menu">
+
+                    <!-- ── Dashboard ── -->
                     <li class="nav-item">
                         <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
-                            <i class="nav-icon fas fa-tachometer-alt"></i>
-                            <p>Dashboard</p>
+                            <i class="nav-icon fas fa-tachometer-alt"></i><p>Dashboard</p>
                         </a>
                     </li>
-                    
-                    <!-- Sales & Orders -->
+
+                    <!-- ══ SALES & CRM ══ -->
+                    <li class="nav-header">SALES &amp; CRM</li>
+
                     <li class="nav-item has-treeview {% if 'inquiry' in request.endpoint or 'order' in request.endpoint %}menu-open{% endif %}">
                         <a href="#" class="nav-link {% if 'inquiry' in request.endpoint or 'order' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-shopping-cart"></i>
-                            <p>
-                                Sales & Orders
-                                <i class="right fas fa-angle-left"></i>
-                            </p>
+                            <i class="nav-icon fas fa-shopping-cart"></i><p>Sales &amp; Orders<i class="right fas fa-angle-left"></i></p>
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
                                 <a href="{{ url_for('main.inquiries') }}" class="nav-link {% if 'inquiry' in request.endpoint %}active{% endif %}">
-                                    <i class="nav-icon fas fa-envelope"></i>
-                                    <p>Inquiries</p>
+                                    <i class="nav-icon fas fa-envelope"></i><p>Inquiries</p>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a href="{{ url_for('main.orders') }}" class="nav-link {% if 'order' in request.endpoint %}active{% endif %}">
-                                    <i class="nav-icon fas fa-file-invoice"></i>
-                                    <p>Orders</p>
+                                    <i class="nav-icon fas fa-file-invoice"></i><p>Orders</p>
                                 </a>
                             </li>
                         </ul>
                     </li>
-                    
-                    <!-- Products & Inventory -->
+
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.customers') }}" class="nav-link {% if 'customer' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-user-tie"></i><p>Customers</p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.painting_dashboard') }}" class="nav-link {% if 'painting' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-palette"></i><p>Painting Service</p>
+                        </a>
+                    </li>
+
+                    <!-- ══ PRODUCTION ══ -->
+                    <li class="nav-header">PRODUCTION</li>
+
                     <li class="nav-item">
                         <a href="{{ url_for('main.products') }}" class="nav-link {% if 'product' in request.endpoint %}active{% endif %}">
                             <i class="nav-icon fas fa-box"></i>
-                            <p>
-                                Products
-                                {% if low_stock_count is defined and low_stock_count > 0 %}
-                                <span class="right badge badge-danger">{{ low_stock_count }}</span>
-                                {% endif %}
-                            </p>
-                        </a>
-                    </li>
-                    <!-- Painting Service -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.painting_dashboard') }}" class="nav-link {% if 'painting' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-palette"></i>
-                            <p>Painting Service</p>
-                        </a>
-                    </li>
-                    <!-- Customers -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.customers') }}" class="nav-link {% if 'customer' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-users"></i>
-                            <p>Customers</p>
-                        </a>
-                    </li>
-                    
-                    <!-- Production Header -->
-                    <li class="nav-header">PRODUCTION</li>
-
-                    <!-- Raw Materials -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.raw_materials') }}" class="nav-link {% if 'raw_material' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-cubes"></i>
-                            <p>Raw Materials</p>
+                            <p>Products{% if low_stock_count is defined and low_stock_count > 0 %}<span class="right badge badge-danger">{{ low_stock_count }}</span>{% endif %}</p>
                         </a>
                     </li>
 
-                    <!-- Production Batches -->
+                    <li class="nav-item has-treeview {% if 'production' in request.endpoint or 'raw_material' in request.endpoint %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'production' in request.endpoint or 'raw_material' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-industry"></i><p>Manufacturing<i class="right fas fa-angle-left"></i></p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.raw_materials') }}" class="nav-link {% if 'raw_material' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-cubes"></i><p>Raw Materials</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.production_batches') }}" class="nav-link {% if 'production_batch' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-layer-group"></i><p>Batches</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.production_reports') }}" class="nav-link {% if 'production_reports' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-chart-bar"></i><p>Production Reports</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.material_consumption_report') }}" class="nav-link {% if 'material_consumption' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-file-alt"></i><p>Material Consumption</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <li class="nav-item">
-                        <a href="{{ url_for('main.production_batches') }}" class="nav-link {% if 'production_batch' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-industry"></i>
-                            <p>Production Batches</p>
+                        <a href="{{ url_for('main.qc_parameters') }}" class="nav-link {% if 'qc' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-microscope"></i><p>Quality Control</p>
                         </a>
                     </li>
 
-                    <!-- Production Reports -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.production_reports') }}" class="nav-link {% if 'production_reports' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-chart-bar"></i>
-                            <p>Production Reports</p>
-                        </a>
-                    </li>
-
-                    <!-- Material Consumption Report -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.material_consumption_report') }}" class="nav-link">
-                            <i class="nav-icon fas fa-file-alt"></i>
-                            <p>Material Consumption</p>
-                        </a>
-                    </li>
-                    <!-- Supply Chain Header -->
+                    <!-- ══ SUPPLY CHAIN ══ -->
                     <li class="nav-header">SUPPLY CHAIN</li>
 
-                    <!-- Suppliers -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.suppliers') }}" class="nav-link {% if 'supplier' in request.endpoint and 'purchase' not in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-truck"></i>
-                            <p>Suppliers</p>
+                    <li class="nav-item has-treeview {% if 'supplier' in request.endpoint or 'purchase_order' in request.endpoint or 'goods_receipt' in request.endpoint %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'supplier' in request.endpoint or 'purchase_order' in request.endpoint or 'goods_receipt' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-truck"></i><p>Procurement<i class="right fas fa-angle-left"></i></p>
                         </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.suppliers') }}" class="nav-link {% if 'supplier' in request.endpoint and 'invoice' not in request.endpoint and 'purchase' not in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-address-book"></i><p>Suppliers</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.purchase_orders') }}" class="nav-link {% if 'purchase_order' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-file-invoice"></i><p>Purchase Orders</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.goods_receipts') }}" class="nav-link {% if 'goods_receipt' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-dolly"></i><p>Goods Receipts</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.supplier_invoices') }}" class="nav-link {% if 'supplier_invoice' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-file-invoice-dollar"></i><p>Supplier Invoices</p>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
-                    <!-- Purchase Orders -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.purchase_orders') }}" class="nav-link {% if 'purchase_order' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-file-invoice"></i>
-                            <p>Purchase Orders</p>
+                    <li class="nav-item has-treeview {% if 'warehouse' in request.endpoint or 'stock_transfer' in request.endpoint or 'material_batch' in request.endpoint %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'warehouse' in request.endpoint or 'stock_transfer' in request.endpoint or 'material_batch' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-warehouse"></i><p>Inventory<i class="right fas fa-angle-left"></i></p>
                         </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.warehouses') }}" class="nav-link {% if 'warehouse' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-store"></i><p>Warehouses</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.stock_transfers') }}" class="nav-link {% if 'stock_transfer' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-exchange-alt"></i><p>Stock Transfers</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.material_batches') }}" class="nav-link {% if 'material_batch' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-boxes"></i><p>Material Batches</p>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
-                    <!-- Goods Receipts -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.goods_receipts') }}" class="nav-link {% if 'goods_receipt' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-dolly"></i>
-                            <p>Goods Receipts</p>
-                        </a>
-                    </li>
+                    <!-- ══ HUMAN RESOURCES ══ -->
+                    <li class="nav-header">HUMAN RESOURCES</li>
 
-                    <!-- Warehouses -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.warehouses') }}" class="nav-link {% if 'warehouse' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-warehouse"></i>
-                            <p>Warehouses</p>
-                        </a>
-                    </li>
-
-                    <!-- Stock Transfers -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.stock_transfers') }}" class="nav-link {% if 'stock_transfer' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-exchange-alt"></i>
-                            <p>Stock Transfers</p>
-                        </a>
-                    </li>
-
-                    <!-- Material Batches -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.material_batches') }}" class="nav-link {% if 'material_batch' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-boxes"></i>
-                            <p>Material Batches</p>
-                        </a>
-                    </li>
-
-                    <!-- Supplier Invoices -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.supplier_invoices') }}" class="nav-link {% if 'supplier_invoice' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-file-invoice-dollar"></i>
-                            <p>Supplier Invoices</p>
-                        </a>
-                    </li>
-                    
-                    
-                    <!-- Finance Header -->
-                    <li class="nav-header">FINANCE</li>
-                    
-                    <!-- Payroll & HR -->
-                    <li class="nav-item has-treeview {% if 'payroll' in request.endpoint or 'employee' in request.endpoint or 'attendance' in request.endpoint or 'timesheet' in request.endpoint or 'leave' in request.endpoint or 'payment' in request.endpoint %}menu-open{% endif %}">
-                        <a href="#" class="nav-link {% if 'payroll' in request.endpoint or 'employee' in request.endpoint or 'attendance' in request.endpoint or 'timesheet' in request.endpoint or 'leave' in request.endpoint or 'payment' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-money-bill-wave"></i>
-                            <p>
-                                Payroll & HR
-                                <i class="right fas fa-angle-left"></i>
-                            </p>
+                    <li class="nav-item has-treeview {% if 'payroll' in request.endpoint or 'employee' in request.endpoint or 'attendance' in request.endpoint or 'timesheet' in request.endpoint or 'leave' in request.endpoint or 'payment' in request.endpoint or 'shift' in request.endpoint %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'payroll' in request.endpoint or 'employee' in request.endpoint or 'attendance' in request.endpoint or 'timesheet' in request.endpoint or 'leave' in request.endpoint or 'payment' in request.endpoint or 'shift' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-users"></i><p>HR &amp; Payroll<i class="right fas fa-angle-left"></i></p>
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
                                 <a href="{{ url_for('main.payroll') }}" class="nav-link {% if request.endpoint == 'main.payroll' %}active{% endif %}">
-                                    <i class="nav-icon fas fa-users"></i>
-                                    <p>Employees</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ url_for('main.attendance') }}" class="nav-link {% if 'attendance' in request.endpoint %}active{% endif %}">
-                                    <i class="nav-icon fas fa-clipboard-check"></i>
-                                    <p>Attendance</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ url_for('main.timesheets') }}" class="nav-link {% if 'timesheet' in request.endpoint %}active{% endif %}">
-                                    <i class="nav-icon fas fa-table"></i>
-                                    <p>Timesheets</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ url_for('main.leave_requests') }}" class="nav-link {% if 'leave' in request.endpoint %}active{% endif %}">
-                                    <i class="nav-icon fas fa-calendar-minus"></i>
-                                    <p>Leave Requests</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ url_for('main.payroll_run') }}" class="nav-link {% if request.endpoint == 'main.payroll_run' %}active{% endif %}">
-                                    <i class="nav-icon fas fa-play-circle"></i>
-                                    <p>Run Payroll</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ url_for('main.payroll_payments') }}" class="nav-link {% if 'payment' in request.endpoint %}active{% endif %}">
-                                    <i class="nav-icon fas fa-money-bill"></i>
-                                    <p>Payments</p>
+                                    <i class="nav-icon fas fa-id-badge"></i><p>Employees</p>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a href="{{ url_for('main.shifts') }}" class="nav-link {% if 'shift' in request.endpoint %}active{% endif %}">
-                                    <i class="nav-icon fas fa-business-time"></i>
-                                    <p>Shift Management</p>
+                                    <i class="nav-icon fas fa-business-time"></i><p>Shifts</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.attendance') }}" class="nav-link {% if 'attendance' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-clipboard-check"></i><p>Attendance</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.timesheets') }}" class="nav-link {% if 'timesheet' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-clock"></i><p>Timesheets</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.leave_requests') }}" class="nav-link {% if 'leave' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-calendar-minus"></i><p>Leave Requests</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.payroll_run') }}" class="nav-link {% if request.endpoint == 'main.payroll_run' %}active{% endif %}">
+                                    <i class="nav-icon fas fa-play-circle"></i><p>Run Payroll</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.payroll_payments') }}" class="nav-link {% if request.endpoint == 'main.payroll_payments' %}active{% endif %}">
+                                    <i class="nav-icon fas fa-money-bill"></i><p>Salary Payments</p>
                                 </a>
                             </li>
                         </ul>
                     </li>
-                    
-                    <!-- Expenses -->
+
+                    <!-- ══ FINANCE & ACCOUNTING ══ -->
+                    <li class="nav-header">FINANCE &amp; ACCOUNTING</li>
+
                     <li class="nav-item">
                         <a href="{{ url_for('main.expenses') }}" class="nav-link {% if 'expense' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-receipt"></i>
-                            <p>Expenses</p>
+                            <i class="nav-icon fas fa-receipt"></i><p>Expenses</p>
                         </a>
                     </li>
-                    
-                    <!-- Accounting -->
-                    <!-- ============================================================================
-     ACCOUNTING & FINANCE NAVIGATION (ADD TO SIDEBAR)
-     ============================================================================ -->
 
-<!-- Accounting Header -->
-<li class="nav-header">ACCOUNTING & FINANCE</li>
-<li class="nav-item">
-    <a href="{{ url_for('main.accounting_dashboard') }}" class="nav-link">
-        <i class="nav-icon fas fa-calculator"></i>
-        <p>Accounting</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="{{ url_for('main.chart_of_accounts') }}" class="nav-link">
-        <i class="nav-icon fas fa-list"></i>
-        <p>Chart of Accounts</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="{{ url_for('main.journal_entries') }}" class="nav-link">
-        <i class="nav-icon fas fa-book"></i>
-        <p>Journal Entries</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="{{ url_for('main.general_ledger') }}" class="nav-link">
-        <i class="nav-icon fas fa-book-open"></i>
-        <p>General Ledger</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="{{ url_for('main.trial_balance') }}" class="nav-link">
-        <i class="nav-icon fas fa-balance-scale"></i>
-        <p>Trial Balance</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="{{ url_for('main.payment_vouchers') }}" class="nav-link">
-        <i class="nav-icon fas fa-money-bill-wave"></i>
-        <p>Payment Vouchers</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="{{ url_for('main.receipt_vouchers') }}" class="nav-link">
-        <i class="nav-icon fas fa-hand-holding-usd"></i>
-        <p>Receipt Vouchers</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="{{ url_for('main.bank_accounts') }}" class="nav-link">
-        <i class="nav-icon fas fa-university"></i>
-        <p>Bank Accounts</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="{{ url_for('main.bank_reconciliation') }}" class="nav-link">
-        <i class="nav-icon fas fa-exchange-alt"></i>
-        <p>Bank Reconciliation</p>
-    </a>
-</li>
-<!-- Accounting Periods -->
-<li class="nav-item">
-    <a href="{{ url_for('main.accounting_periods') }}" class="nav-link {{ 'active' if request.endpoint == 'main.accounting_periods' }}">
-        <i class="nav-icon fas fa-calendar-alt"></i>
-        <p>Accounting Periods</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="{{ url_for('main.audit_log') }}" class="nav-link">
-        <i class="nav-icon fas fa-history"></i>
-        <p>Audit Log</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="{{ url_for('main.fixed_assets_list') }}" class="nav-link {% if 'fixed_asset' in request.endpoint or request.path.startswith('/assets') %}active{% endif %}">
-        <i class="nav-icon fas fa-industry"></i>
-        <p>Fixed Assets</p>
-    </a>
-</li>
+                    <li class="nav-item has-treeview {% if 'accounting' in request.endpoint and 'dashboard' not in request.endpoint %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'accounting' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-calculator"></i><p>Accounting<i class="right fas fa-angle-left"></i></p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.accounting_dashboard') }}" class="nav-link {% if request.endpoint == 'main.accounting_dashboard' %}active{% endif %}">
+                                    <i class="nav-icon fas fa-tachometer-alt"></i><p>Overview</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.chart_of_accounts') }}" class="nav-link {% if 'chart_of_accounts' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-list"></i><p>Chart of Accounts</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.journal_entries') }}" class="nav-link {% if 'journal_entr' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-book"></i><p>Journal Entries</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.general_ledger') }}" class="nav-link {% if 'general_ledger' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-book-open"></i><p>General Ledger</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.trial_balance') }}" class="nav-link {% if 'trial_balance' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-balance-scale"></i><p>Trial Balance</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
 
-    <!-- Financial Statements Header -->
-    <li class="nav-header mt-3">FINANCIAL STATEMENTS</li>
+                    <li class="nav-item has-treeview {% if 'voucher' in request.endpoint %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'voucher' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-file-invoice-dollar"></i><p>Vouchers<i class="right fas fa-angle-left"></i></p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.payment_vouchers') }}" class="nav-link {% if 'payment_voucher' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-money-bill-wave"></i><p>Payment Vouchers</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.receipt_vouchers') }}" class="nav-link {% if 'receipt_voucher' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-hand-holding-usd"></i><p>Receipt Vouchers</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
 
-    <!-- Profit & Loss -->
-    <li class="nav-item">
-        <a href="{{ url_for('main.profit_loss') }}" class="nav-link {{ 'active' if request.endpoint == 'main.profit_loss' }}">
-            <i class="nav-icon fas fa-chart-line"></i>
-            <p>Profit & Loss</p>
-        </a>
-    </li>
+                    <li class="nav-item has-treeview {% if 'bank' in request.endpoint %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'bank' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-university"></i><p>Banking<i class="right fas fa-angle-left"></i></p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.bank_accounts') }}" class="nav-link {% if request.endpoint == 'main.bank_accounts' %}active{% endif %}">
+                                    <i class="nav-icon fas fa-piggy-bank"></i><p>Bank Accounts</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.bank_reconciliation') }}" class="nav-link {% if 'bank_reconciliation' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-exchange-alt"></i><p>Reconciliation</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
 
-    <!-- Balance Sheet -->
-    <li class="nav-item">
-        <a href="{{ url_for('main.balance_sheet') }}" class="nav-link {{ 'active' if request.endpoint == 'main.balance_sheet' }}">
-            <i class="nav-icon fas fa-file-invoice-dollar"></i>
-            <p>Balance Sheet</p>
-        </a>
-    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.fixed_assets_list') }}" class="nav-link {% if 'fixed_asset' in request.endpoint or request.path.startswith('/assets') %}active{% endif %}">
+                            <i class="nav-icon fas fa-industry"></i><p>Fixed Assets</p>
+                        </a>
+                    </li>
 
-    <!-- Cash Flow -->
-    <li class="nav-item">
-        <a href="{{ url_for('main.cash_flow') }}" class="nav-link {{ 'active' if request.endpoint == 'main.cash_flow' }}">
-            <i class="nav-icon fas fa-flowchart"></i>
-            <p>Cash Flow Statement</p>
-        </a>
-    </li>
-                    
-                    <!-- Financial Statements (Phase 2) -->
                     <li class="nav-item has-treeview {% if 'profit_loss' in request.endpoint or 'balance_sheet' in request.endpoint or 'cash_flow' in request.endpoint %}menu-open{% endif %}">
                         <a href="#" class="nav-link {% if 'profit_loss' in request.endpoint or 'balance_sheet' in request.endpoint or 'cash_flow' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-file-invoice-dollar"></i>
-                            <p>
-                                Financial Statements
-                                <i class="right fas fa-angle-left"></i>
-                            </p>
+                            <i class="nav-icon fas fa-chart-line"></i><p>Financial Statements<i class="right fas fa-angle-left"></i></p>
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
                                 <a href="{{ url_for('main.profit_loss') }}" class="nav-link {% if 'profit_loss' in request.endpoint %}active{% endif %}">
-                                    <i class="nav-icon fas fa-chart-line"></i>
-                                    <p>P&L Statement</p>
+                                    <i class="nav-icon fas fa-chart-line"></i><p>Profit &amp; Loss</p>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a href="{{ url_for('main.balance_sheet') }}" class="nav-link {% if 'balance_sheet' in request.endpoint %}active{% endif %}">
-                                    <i class="nav-icon fas fa-balance-scale"></i>
-                                    <p>Balance Sheet</p>
+                                    <i class="nav-icon fas fa-balance-scale"></i><p>Balance Sheet</p>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a href="{{ url_for('main.cash_flow') }}" class="nav-link {% if 'cash_flow' in request.endpoint %}active{% endif %}">
-                                    <i class="nav-icon fas fa-hand-holding-usd"></i>
-                                    <p>Cash Flow</p>
+                                    <i class="nav-icon fas fa-water"></i><p>Cash Flow</p>
                                 </a>
                             </li>
                         </ul>
                     </li>
-                    
-                    <!-- Analytics Header -->
-                    <li class="nav-header">ANALYTICS</li>
 
-                    <!-- Advanced Analytics -->
+                    <li class="nav-item has-treeview {% if 'accounting_period' in request.endpoint or 'audit_log' in request.endpoint %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'accounting_period' in request.endpoint or 'audit_log' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-cogs"></i><p>Controls<i class="right fas fa-angle-left"></i></p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.accounting_periods') }}" class="nav-link {% if 'accounting_period' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-calendar-alt"></i><p>Accounting Periods</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.audit_log') }}" class="nav-link {% if 'audit_log' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-history"></i><p>Audit Log</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- ══ TAX ══ -->
+                    <li class="nav-header">TAX</li>
+
+                    <li class="nav-item has-treeview {% if 'tax' in request.endpoint or 'fbr' in request.endpoint %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'tax' in request.endpoint or 'fbr' in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-file-contract"></i><p>FBR &amp; Tax<i class="right fas fa-angle-left"></i></p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.fbr_invoices') }}" class="nav-link {% if 'fbr_invoice' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-file-invoice"></i><p>FBR Invoices</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.tax_returns') }}" class="nav-link {% if 'tax_return' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-undo"></i><p>Tax Returns</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.sales_tax_report') }}" class="nav-link {% if 'sales_tax' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-percentage"></i><p>Sales Tax Report</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- ══ ANALYTICS & REPORTS ══ -->
+                    <li class="nav-header">ANALYTICS &amp; REPORTS</li>
+
                     <li class="nav-item">
                         <a href="{{ url_for('main.analytics_dashboard') }}" class="nav-link {% if 'analytics' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-chart-line"></i>
-                            <p>Advanced Analytics</p>
+                            <i class="nav-icon fas fa-chart-pie"></i><p>Analytics</p>
                         </a>
                     </li>
 
-                    <!-- Analysis -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.analytics_dashboard') }}" class="nav-link {% if 'analytics' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-chart-pie"></i>
-                            <p>Analysis</p>
+                    <li class="nav-item has-treeview {% if 'report' in request.endpoint and 'production' not in request.endpoint %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'report' in request.endpoint and 'production' not in request.endpoint %}active{% endif %}">
+                            <i class="nav-icon fas fa-chart-bar"></i><p>Reports<i class="right fas fa-angle-left"></i></p>
                         </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.reports_dashboard') }}" class="nav-link {% if request.endpoint == 'main.reports_dashboard' %}active{% endif %}">
+                                    <i class="nav-icon fas fa-th-large"></i><p>Reports Dashboard</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.sales_analysis_report') }}" class="nav-link {% if 'sales_analysis' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-chart-line"></i><p>Sales Analysis</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.inventory_valuation_report') }}" class="nav-link {% if 'inventory_valuation' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-boxes"></i><p>Inventory Valuation</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('main.production_efficiency_report') }}" class="nav-link {% if 'production_efficiency' in request.endpoint %}active{% endif %}">
+                                    <i class="nav-icon fas fa-industry"></i><p>Production Efficiency</p>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
-                    <!-- Reports Header -->
-                    <li class="nav-header">REPORTS</li>
-
-                    <!-- Reports Dashboard -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.reports_dashboard') }}" class="nav-link {% if 'reports_dashboard' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-chart-bar"></i>
-                            <p>Reports Dashboard</p>
-                        </a>
-                    </li>
-
-                    <!-- Sales Analysis -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.sales_analysis_report') }}" class="nav-link {% if 'sales_analysis' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-chart-line"></i>
-                            <p>Sales Analysis</p>
-                        </a>
-                    </li>
-
-                    <!-- Inventory Valuation -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.inventory_valuation_report') }}" class="nav-link {% if 'inventory_valuation' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-boxes"></i>
-                            <p>Inventory Valuation</p>
-                        </a>
-                    </li>
-
-                    <!-- Production Efficiency -->
-                    <li class="nav-item">
-                        <a href="{{ url_for('main.production_efficiency_report') }}" class="nav-link {% if 'production_efficiency' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-industry"></i>
-                            <p>Production Efficiency</p>
-                        </a>
-                    </li>
-                    
-                    <!-- System Header -->
+                    <!-- ══ SYSTEM ══ -->
                     <li class="nav-header">SYSTEM</li>
-                    
-                    <!-- Settings -->
+
                     <li class="nav-item">
                         <a href="{{ url_for('main.settings') }}" class="nav-link {% if 'settings' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-cog"></i>
-                            <p>Settings</p>
+                            <i class="nav-icon fas fa-cog"></i><p>Settings</p>
                         </a>
                     </li>
 
-                    <!-- Admin: User Management -->
                     {% if current_user.is_authenticated and current_user.role == 'admin' %}
                     <li class="nav-item">
                         <a href="{{ url_for('main.admin_users') }}" class="nav-link {% if 'admin_user' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-users-cog"></i>
-                            <p>User Management</p>
+                            <i class="nav-icon fas fa-users-cog"></i><p>User Management</p>
                         </a>
                     </li>
                     {% endif %}
 
-                    <!-- Change Password -->
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
                         <a href="{{ url_for('main.change_password') }}" class="nav-link {% if 'change_password' in request.endpoint %}active{% endif %}">
-                            <i class="nav-icon fas fa-key"></i>
-                            <p>Change Password</p>
+                            <i class="nav-icon fas fa-key"></i><p>Change Password</p>
                         </a>
                     </li>
                     {% endif %}
+
                 </ul>
             </nav>
         </div>
