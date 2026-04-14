@@ -1477,7 +1477,8 @@ def merge_customers():
         db.func.count(Customer.id) > 1
     ).all()
     
-    return render_template('customers/merge.html', potential_duplicates=potential_duplicates)
+    customers = Customer.query.filter_by(is_active=True, is_deleted=False).order_by(Customer.name).all()
+    return render_template('customers/merge.html', potential_duplicates=potential_duplicates, customers=customers)
 
 
 # ============================================================================
