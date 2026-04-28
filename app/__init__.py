@@ -315,6 +315,33 @@ def create_app():
     from app.routes import main_bp
     app.register_blueprint(main_bp)
     
+    # Register domain-specific blueprints
+    from app.blueprints.auth import auth_bp
+    from app.blueprints.products import products_bp
+    from app.blueprints.orders import orders_bp
+    from app.blueprints.customers import customers_bp
+    from app.blueprints.suppliers import suppliers_bp
+    from app.blueprints.inventory import inventory_bp
+    from app.blueprints.production import production_bp
+    from app.blueprints.qc import qc_bp
+    from app.blueprints.accounting import accounting_bp
+    from app.blueprints.payroll import payroll_bp
+    from app.blueprints.reports import reports_bp
+    from app.blueprints.admin import admin_bp
+    
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(products_bp)
+    app.register_blueprint(orders_bp)
+    app.register_blueprint(customers_bp)
+    app.register_blueprint(suppliers_bp)
+    app.register_blueprint(inventory_bp)
+    app.register_blueprint(production_bp)
+    app.register_blueprint(qc_bp)
+    app.register_blueprint(accounting_bp)
+    app.register_blueprint(payroll_bp)
+    app.register_blueprint(reports_bp)
+    app.register_blueprint(admin_bp)
+    
     # Create tables and admin user
     with app.app_context():
         try:

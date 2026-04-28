@@ -1,35 +1,60 @@
-version: '3.8'  
-services:  
-  db:  
-    image: postgres:13  
-    environment:  
-      POSTGRES_DB: mydatabase  
-      POSTGRES_USER: user  
-      POSTGRES_PASSWORD: password  
-    volumes:  
-      - db_data:/var/lib/postgresql/data  
-    healthcheck:  
-      test: ['CMD-SHELL', 'pg_isready -U user']  
-      interval: 5s  
-      timeout: 2s  
-      retries: 5  
-  web:  
-    build:  
-      context: .  
-      dockerfile: Dockerfile  
-    ports:  
-      - '5000:5000'  
-    depends_on:  
-      db:  
-        condition: service_healthy  
-    environment:  
-      FLASK_ENV: development  
-      DATABASE_URL: postgres://user:password@db:5432/mydatabase  
-    healthcheck:  
-      test: ['CMD-SHELL', 'curl --fail http://localhost:5000/health || exit 1']  
-      interval: 10s  
-      timeout: 2s  
-      retries: 5  
+version: '3.8'
 
-volumes:  
-  db_data:  
+services:
+  db:
+    image: postgres:13
+    container_name: ampoulex_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ampoulex_db
+      POSTGRES_USER: ampoulex_user
+      POSTGRES_PASSWORD: ampoulex_password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ampoulex_user -d ampoulex_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ampoulex_network
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ampoulex_web
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      FLASK_ENV: production
+      FLASK_DEBUG: 0
+      DATABASE_URL: postgresql://ampoulex_user:ampoulex_password@db:5432/ampoulex_db
+      SECRET_KEY: your-secret-key-change-in-production
+      PORT: 8080
+    volumes:
+      - ./logs:/app/logs
+      - ./static/reports:/app/static/reports
+      - ./static/barcodes:/app/static/barcodes
+      - ./static/qrcodes:/app/static/qrcodes
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:8080/login || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - ampoulex_network
+
+networks:
+  ampoulex_network:
+    driver: bridge
+
+volumes:
+  db_data:

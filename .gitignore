@@ -1,65 +1,73 @@
-.env
+```
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-venv/
-.venv/
-env/
-.env.production
-*.egg-info/
-dist/
 build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-node_modules/
-*.db
-*.sqlite
+# Virtual environments
 venv/
+ENV/
+env.bak/
+.venv/
+
+# Testing
+.coverage
+coverage/
+htmlcov/
+.nosetests
+.pytest_cache/
+.tox/
+.coverage.*
+
+# Environment variables
 .env
-instance/
+.env.local
+.env.*
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-instance/
-
-# IDE
+# IDE and editor files
 .vscode/
 .idea/
 *.swp
 *.swo
+*.tmp
 
-# OS
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
 # Logs
 *.log
-logs/
 
-# Static files (generated)
-# ... (keep your existing Python, DB, IDE, OS rules) ...
+# Distribution / packaging
+.Python
+*.egg-info/
+MANIFEST
 
-# Static files (Generated)
-# Keep the folders, but ignore the files inside them
-static/reports/.gitkeep
-static/barcodes/.gitkeep
-static/qrcodes/.gitkeep
-static/logos/.gitkeep
+# Pytest
+pytest_debug.log
 
-# Ignore all files inside these folders except .gitkeep
-static/reports/*
-!static/reports/.gitkeep
-static/barcodes/*
-!static/barcodes/.gitkeep
-static/qrcodes/*
-!static/qrcodes/.gitkeep
-static/logos/*
-!static/logos/.gitkeep
-# Test
-.pytest_cache/
-.coverage
-htmlcov/
-
+# Coverage
+.coverage.*
+```
